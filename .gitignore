@@ -1,0 +1,5 @@
+pdfs/
+output/
+.DS_Store
+*.docx
+*.doc
