@@ -15,7 +15,7 @@
 # SPECIES NAMES
 ###############
 # Bugula = Bugula neritina
-# Stolinifera = Bugula stolonifera
+# Stolonifera = Bugula stolonifera
 # Bryo = Hippopodina sp.	
 # Sponge = Unknown (Microcionidae family see Hart & Marshall 2009, Ecology 90: 1485--1491)
 

@@ -1,0 +1,16 @@
+model {
+
+	# priors for fixed effects in metabolic rate analysis
+	for(i in 1:K) { 
+		beta[i] ~ dnorm(0, 0.0001)
+	}
+	tauB  ~   dgamma(1.0E-3,1.0E-3)
+	varB  <-  1/tauB # variance, equivalent to inverse(tauB)
+
+	#linear regression for metabolic rate
+	for(i in 1:length(lnRate)) {
+		lnRate[i]  ~  dnorm(muB[i], tauB)
+		muB[i]     <- inprod(beta[], jagsModelMatrix[i,])
+	}
+
+}

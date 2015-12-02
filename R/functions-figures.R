@@ -65,74 +65,91 @@ rounded  <-  function(value, precision=1, change=FALSE) {
 ###########################
 # SPECIES AS RANFOM EFFECTS
 ###########################
-plotResp  <-  function() {
-  # color for the 4 species
-  cols  <-  c('Bryo'='dodgerblue2', 'Sponge'='tomato', 'Bugula'='darkolivegreen3', 'Stolonifera'='darkgoldenrod')
-  metRates$cols  <-  cols[match(metRates$Species, names(cols))]
+posteriorsBoltzmann  <-  function() {
+  par(mfrow=c(1, 2), mar=c(5.1,4.1,4.1,3), omi=c(0.5,1,0.5,1), cex=1)
+  theCol  <-  c('Hippopodina sp.'='dodgerblue2', 'Bugula neritina'='darkolivegreen3', 'Sponge'='tomato', 'Bugula stolinifera'='darkgoldenrod')
 
-  # extract fixed effects first
-  xnBoTs <-  fixef(modelLmer)['(Intercept)']
-  xnEr   <-  fixef(modelLmer)['invKT']
-  xnA    <-  fixef(modelLmer)['lnMass']
-
-  # extract random effects - deviations from fixed effects
-  nres   <-  ranef(modelLmer)$Species
-  nBoTs  <-  xnBoTs + nres[['(Intercept)']][match(metRates$Species, rownames(nres))]
-  nA     <-  rep(xnA, length(nBoTs))
-  nEg    <-  xnEr + nres$invKT[match(metRates$Species, rownames(nres))]
-  
-  #corrects metabolic rates for temperature first and then size scaling
-  btNlmer  <-  metRates$lnRate - nEg*metRates$invKT
-  bwNlmer  <-  metRates$lnRate - nA*metRates$lnMass
-  
-  par(mfrow=c(1, 2), mar=c(5.1,4.1,4.1,3), omi=c(0.5,1,0.5,2), cex=1, family='Times')
-  #(a)
-  plot(btNlmer ~ metRates$lnMass, pch=21, col=metRates$cols, bg=make.transparent(metRates$cols, .5),  xlab='ln(Mass) (g)', ylab=expression(paste('ln(Metabolic rate @ 20'*degree,'C) (g C d'^{-1}, ')'), sep=''), las=1, xlim=c(-1, 6), ylim=c(-3, 5), cex.lab=1.3, xpd=NA)  
-
-  for(j in 1:nrow(nres)) {
-    xpoints  <-  range(metRates$lnMass[metRates$Species == rownames(nres)[j]])
-    xpoints  <-  seq(xpoints[1], xpoints[2], length.out=50)
-    nresA    <-  xnA + nres[['lnMass']][j]
-    expr     <-  (xnBoTs + nres[['(Intercept)']][j]) + nresA*xpoints
-    points(xpoints, expr, type='l', lty=2, col='grey30', lwd=1.5)
+  # mass
+  plot(NA, xlim=c(-1.5,2.5), ylim=c(0,1.5), xlab='Mass scaling', ylab='Posterior density', las=1)
+  for(i in 1:4) {
+    xDens  <-  density(rowSums(bfit$BUGSoutput$sims.matrix[,c('A', paste0('s[', i, ',1]'))]))
+    polygon(c(xDens$x, min(xDens$x)), c(xDens$y, min(xDens$y)), border=theCol[i], col=make.transparent(theCol[i], 0.3))
+    label(c(0.02, 0.07), rep(1-i*0.1, 2), text=FALSE, type='l', lwd=2, col=theCol[i])
+      label(0.08, 1-i*0.1, round(xDens$x[which.max(xDens$y)[1]], 2), adj=c(0, 0.5), cex=0.8)
   }
-  points(c(-2, 7), xnBoTs + xnA*c(-2, 7), type='l', lty=1, col='black', lwd=2.5)
-  #fig position label
-  label(px=0, py=1.1, '(a)', cex=1.2, font=3, adj=c(0.5,0.5), xpd=NA)
-  #trends labels
-  label(px=c(.85,.95), py=c(.95,.95), text=FALSE, type='l', lty=1, lwd=2.5, col='black', adj=c(0.5,0.5))
-  label(px=.84, py=.95, lab=substitute('mean trend: '~italic(y)== B + A*italic(x), list(B=substr(xnBoTs,1,5), A=round(xnA,2))), cex=0.9, adj=c(1, 0.5))
-  label(px=c(.85,.95), py=c(.88,.88), text=FALSE, type='l', lty=2, lwd=1.5, col='grey30', adj=c(0.5,0.5))  
-  label(px=.84, py=.88, lab='species-level variation', cex=0.9, adj=c(1, 0.5))
 
-  #(b)
-  plot(metRates$invKT, bwNlmer, pch=21, col=metRates$cols, bg=make.transparent(metRates$cols, .5),  xlab=expression(paste('Inverse Temperature, 1/', italic(kT[s]), ' - 1/', italic(kT), ' (eV'^-1,')', sep='')), ylab=expression(paste('ln(Metabolic rate @ 1 g) (g C d'^{-1}, ')'), sep=''), las=1, xlim=c(-3, 1), ylim=c(-5.5, 3), cex.lab=1.3, xpd=NA, xaxt='n')
-  axis(1, at=round(1/8.62e-5*(1/288.15-1/(273.15+seq(-3,37,by=10))), 2))
-  axis(side=3, at=round(1/8.62e-5*(1/288.15-1/(273.15+seq(-3,37,by=10))),2), labels=seq(-3,37,by=10))
-
-  for(j in 1:nrow(nres)) {
-    xpoints  <-  range(metRates$invKT[metRates$Species == rownames(nres)[j]])
-    xpoints  <-  seq(xpoints[1], xpoints[2], length.out=50)
-    nresEr   <-  xnEr + nres[['invKT']][j]
-    expr     <-  (xnBoTs + nres[['(Intercept)']][j]) + nresEr*xpoints
-    points(xpoints, expr, type='l', lty=2, col='grey30', lwd=1.5)
+  # temperature
+  par(mar=c(5.1,1.1,4.1,6))
+  plot(NA, xlim=c(0,1.1), ylim=c(0,9), xlab='Temperature dependence', ylab='', las=1)
+  for(i in 1:4) {
+    xDens  <-  density(rowSums(bfit$BUGSoutput$sims.matrix[,c('Er', paste0('s[', i, ',3]'))]))
+    polygon(c(xDens$x, min(xDens$x)), c(xDens$y, min(xDens$y)), border=theCol[i], col=make.transparent(theCol[i], 0.3))
+    label(c(0.02, 0.07), rep(1-i*0.1, 2), text=FALSE, type='l', lwd=2, col=theCol[i])
+      label(0.08, 1-i*0.1, round(xDens$x[which.max(xDens$y)[1]], 2), adj=c(0, 0.5), cex=0.8)
   }
-  
-  mean.nx           <-  1/8.62e-5*(1/288.15-1/(263:323))
-  mean.expr.nlmer  <-  xnBoTs + xnEr*mean.nx
-  points(mean.nx, mean.expr.nlmer, type='l', lty=1, col='black', lwd=2.5)
-  #fig position label
-  label(px=0, py=1.1, '(b)', cex=1.2, font=3, adj=c(0.5,0.5), xpd=NA)
-  #trends labels
-  label(px=c(.85,.95), py=c(.95,.95), text=FALSE, type='l', lty=1, lwd=2.5, col='black', adj=c(0.5,0.5))
-  label(px=.84, py=.95, lab=substitute('mean trend: '~italic(y)== B + A*italic(x), list(B=substr(xnBoTs,1,5), A=round(xnEr,2))), cex=0.9, adj=c(1, 0.5))
-  label(px=c(.85,.95), py=c(.88,.88), text=FALSE, type='l', lty=2, lwd=1.5, col='grey30', adj=c(0.5,0.5))  
-  label(px=.84, py=.88, lab='species-level variation', cex=0.9, adj=c(1, 0.5))
 
-  label(px=.5, py=1.25, expression(paste('Temperature ('*degree,'C)',sep='')), xpd=NA, cex=1.3, adj=c(0.5,0.5))
+  # species color code
+  for(k in seq_along(theCol)) {
+    label(1.1, 1-k*0.1, text=FALSE, pch=21, col=theCol[k], bg=make.transparent(theCol[k], .5), adj=c(0.5, 0.5), xpd=NA)
+    label(1.15, 1-k*0.1, names(theCol)[k], adj=c(0, 0.5), xpd=NA, font=3)
+  }
+}
 
-  for(k in seq_along(cols)) {
-    label(1.1, 1-k*0.1, text=FALSE, pch=21, col=cols[k], bg=make.transparent(cols[k], .5), adj=c(0.5, 0.5), xpd=NA)
-    label(1.15, 1-k*0.1, names(cols)[k], adj=c(0, 0.5), xpd=NA, font=3)
+modelComparison  <-  function() {
+  tmat  <-  tfit$BUGSoutput$sims.matrix
+  tmat  <-  tmat[,paste0('beta[', seq_along(fixef(modelLmer)), ']')]
+  colnames(tmat)  <-  names(fixef(modelLmer))
+  species  <-  unique(metRates$Species)
+  # species real names
+  spNames  <-  c('Hippopodina sp.'='Bryo', 'Bugula neritina'='Bugula', 'Microcionidae'='Sponge', 'Bugula stolonifera'='Stolonifera')
+
+  par(mfcol=c(2,4), omi=c(0.5, 0.5, 0, 0), mai=rep(0.3, 4))
+  for(j in seq_along(species)) {
+    # all species together - 3-way interaction
+    isReferenceSpecies  <-  species[j] == 'Bryo'
+    if(isReferenceSpecies) {
+      ylb  <-  'Rescaled [0,1] posterior density'
+      t10  <-  tmat[, 'lnMass']
+      t25  <-  rowSums(tmat[, c('lnMass', 'lnMass:Temp25')])
+    } else {
+      ylb  <-  ''
+      t10  <-  rowSums(tmat[, c('lnMass', paste0('Species', species[j], ':', 'lnMass'))])
+      t25  <-  rowSums(tmat[, c('lnMass', 'lnMass:Temp25', paste0('Species', species[j], ':', 'lnMass:Temp25'))])
+    }
+    
+    xDens10    <-  density(t10)
+    xDens10$y  <-  xDens10$y / max(xDens10$y)
+    xDens25    <-  density(t25)
+    xDens25$y  <-  xDens25$y / max(xDens25$y)
+
+    # species separate
+    tmatb  <-  perSpeciesJagsFits[[species[j]]]$simsMatrix
+    t10b   <-  tmatb[, 'lnMass']
+    t25b   <-  rowSums(tmatb[, c('lnMass', 'lnMass:Temp25')])
+    
+    xDens10b    <-  density(t10b)
+    xDens10b$y  <-  xDens10b$y / max(xDens10b$y)
+    xDens25b    <-  density(t25b)
+    xDens25b$y  <-  xDens25b$y / max(xDens25b$y)
+
+    # fix xlim
+    xli        <-  range(c(xDens10$x, xDens10b$x, xDens25$x, xDens25b$x))
+    xli        <-  c(xli[1] - 0.05*(xli[2]-xli[1]), xli[2] + 0.05*(xli[2]-xli[1]))
+    plot(NA, xlab='', ylab=ylb, xlim=xli, ylim=c(0,1.2), las=1, xpd=NA, type='l')
+    polygon(c(xDens10$x, min(xDens10$x)), c(xDens10$y, min(xDens10$y)), border='dodgerblue2', col=make.transparent('dodgerblue2', 0.3))
+    polygon(c(xDens25$x, min(xDens25$x)), c(xDens25$y, min(xDens25$y)), border='tomato', col=make.transparent('tomato', 0.3))
+    label(c(0.03, 0.1), rep(0.93, 2), text=FALSE, col='tomato', lwd=1.2, adj=c(0, 0.5), type='l')
+    label(0.12, 0.93, round(xDens25$x[which.max(xDens25$y)[1]], 2), adj=c(0, 0.5), cex=0.7)
+    label(c(0.03, 0.1), rep(0.83, 2), text=FALSE, col='dodgerblue2', lwd=1.2, adj=c(0, 0.5), type='l')
+    label(0.12, 0.83, round(xDens10$x[which.max(xDens10$y)[1]], 2), adj=c(0, 0.5), cex=0.7)
+    label(0.95, 0.93, names(spNames)[grep(species[j], spNames)], font=3, adj=c(1, 0.5), cex=0.9)
+
+    plot(NA, xlab='Mass scaling', ylab=ylb, xlim=xli, ylim=c(0,1.2), las=1, xpd=NA, type='l')
+    polygon(c(xDens10b$x, min(xDens10b$x)), c(xDens10b$y, min(xDens10b$y)), border='dodgerblue2', col=make.transparent('dodgerblue2', 0.3))
+    polygon(c(xDens25b$x, min(xDens25b$x)), c(xDens25b$y, min(xDens25b$y)), border='tomato', col=make.transparent('tomato', 0.3))
+    label(c(0.03, 0.1), rep(0.93, 2), text=FALSE, col='tomato', lwd=1.2, adj=c(0, 0.5), type='l')
+    label(0.12, 0.93, round(xDens25b$x[which.max(xDens25b$y)[1]], 2), adj=c(0, 0.5), cex=0.7)
+    label(c(0.03, 0.1), rep(0.83, 2), text=FALSE, col='dodgerblue2', lwd=1.2, adj=c(0, 0.5), type='l')
+    label(0.12, 0.83, round(xDens10b$x[which.max(xDens10b$y)[1]], 2), adj=c(0, 0.5), cex=0.7)
   }
 }
