@@ -1,0 +1,27 @@
+######################
+# MEANING OF VARIABLES
+######################
+# Run = the day in which the experimental run was conducted
+# Plate = the plate reader
+# Position = grid reference on the plate reader (e.g. 24 well)
+# Location = CT Room approach (e.g. esky)
+# Form = Enrusting vs. Arborescent
+# Species - species code 
+# Temp - temperature in Celsius
+# logM - log (base 10) of mass (units?)
+# logVo2 - log (base 10) of oxygen consumption (units?)
+
+###############
+# SPECIES NAMES
+###############
+# Bugula = Bugula neritina
+# Stolinifera = Bugula stolonifera
+# Bryo = Hippopodina sp.	
+# Sponge = Unknown (Microcionidae family see Hart & Marshall 2009, Ecology 90: 1485--1491)
+
+##############
+# GROWTH FORMS
+##############
+# Bugula spp. = 3D arborescent
+# Hippopodina sp. and Microcionidae = 2D and encrusting
+
