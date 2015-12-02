@@ -1,0 +1,44 @@
+model {
+	
+	# priors for fixed effects in metabolic rate analysis
+	A     ~   dnorm(0.5, 1/0.2)
+	Er    ~   dnorm(0.65,1/0.2)
+	boTs  ~   dnorm(0,1.0E-6)
+	tauB  ~   dgamma(1.0E-3,1.0E-3)
+	varB  <-  1/tauB # variance, equivalent to inverse(tauB)
+
+	# priors for random effects at the species level
+	for(i in 1:max(species)) {
+		s[i, 1:3] ~ dmnorm(zero[ ], tauS[ , ])
+	}
+	
+	zero[1] <-0
+	zero[2] <-0
+	zero[3] <-0
+	tauS[1:3, 1:3] ~ dwish(S[ , ], 4) # use 4 instead of 3 so correlations have uniform prior on correlations
+	
+	#R represents initial values for variance/covariance matrix
+	S[1, 1] <- 1
+	S[1, 2] <- 0
+	S[1, 3] <- 0
+	S[2, 1] <- 0
+	S[2, 2] <- 1
+	S[2, 3] <- 0
+	S[3, 1] <- 0
+	S[3, 2] <- 0
+	S[3, 3] <- 1
+	varS[1:3, 1:3] <- inverse(tauS[ , ])
+
+	# priors for random effects at the run level
+	for(i in 1:max(run)) {
+		r[i] ~ dnorm(0, tauR)
+	}
+	tauR  ~   dgamma(1.0E-3,1.0E-3)
+	varR  <-  1/tauR # variance, equivalent to inverse(tauR)
+
+	#linear regression for metabolic rate
+	for(i in 1:length(lnRate)) {
+		lnRate[i] ~  dnorm(muB[i], tauB)
+		muB[i]     <- (boTs + s[species[i], 1] + r[run[i]]) + (A + s[species[i], 2])*lnMass[i] + (Er + s[species[i], 3])*invKT[i]
+	}
+}
