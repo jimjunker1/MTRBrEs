@@ -19,6 +19,9 @@ modelLmer2  <-  lmer(lnRate ~ lnMass * Temp + (1 | Run), data=metRates, REML=TRU
 modelLmer3  <-  lmer(lnRate ~ Temp + (1 | Run), data=metRates, REML=TRUE)
 anova(modelLmer, modelLmer2, modelLmer3) # all significant fixed effects
 
+# asses confidence intervals for model parameters
+confint.merMod(modelLmer)
+
 # refit modelLmer using Boltzmann function instead
 boltzLmer       <-  lmer(lnRate ~ Species + lnMass + invKT + (1 | Run), data=metRates)
 
