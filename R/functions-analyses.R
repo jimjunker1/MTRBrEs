@@ -16,11 +16,12 @@ rmFcts  <-  function(filename) {
 ############
 perSpeciesLmRun  <-  function(dat) {
 	enoughRuns  <-  length(unique(dat$Run)) > 1
+	dat$Plate   <-  as.factor(dat$Plate)
 	if(enoughRuns) {
-		dat$Run  <-  as.factor(dat$Run)
-		lm(lnRate ~ Run + lnMass * Temp, data=dat, contrasts=list(Run='contr.sum'))
+		dat$Run    <-  as.factor(dat$Run)		
+		lm(lnRate ~ Plate + Run + lnMass * Temp, data=dat, contrasts=list(Run='contr.sum', Plate='contr.sum'))
 	} else {
-		lm(lnRate ~ lnMass * Temp, data=dat)
+		lm(lnRate ~ Plate + lnMass * Temp, data=dat, contrasts=list(Plate='contr.sum'))
 	}
 }
 
@@ -44,11 +45,12 @@ modelJags  <-  function(species) {
 
 perSpeciesJagsRun  <-  function(dat) {
 	enoughRuns  <-  length(unique(dat$Run)) > 1
+	dat$Plate   <-  as.factor(dat$Plate)
 	if(enoughRuns) {
 		dat$Run      <-  as.factor(dat$Run)
-		modelMatrix  <-  model.matrix(~ Run + lnMass * Temp, data=dat, contrasts=list(Run='contr.sum'))
+		modelMatrix  <-  model.matrix(~ Plate + Run + lnMass * Temp, data=dat, contrasts=list(Run='contr.sum', Plate='contr.sum'))
 	} else {
-		modelMatrix  <-  model.matrix(~ lnMass * Temp, data=dat)
+		modelMatrix  <-  model.matrix(~ Plate + lnMass * Temp, data=dat, contrasts=list(Plate='contr.sum'))
 	}
 
 	species   <-  unique(dat$Species)

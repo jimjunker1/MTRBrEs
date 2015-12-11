@@ -1,3 +1,4 @@
+library(plyr)
 library(R2jags)
 library(lme4)
 library(bbmle)
