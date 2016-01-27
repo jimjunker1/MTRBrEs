@@ -70,3 +70,44 @@ perSpeciesJagsRun  <-  function(dat) {
 	rownames(jagsOutput)[match(rowNames, paste0('beta[', seq_len(K), ']'))]  <-  colnames(modelMatrix)
 	list(simsMatrix=simsMatrix, jagsOutput=jagsOutput)
 }
+
+#############################
+# DEALING WITH BIB REFERENCES
+#############################
+getIndividualBibs  <-  function(path='~/bibtex_library/') {
+  listRefs     <-  dir(path)[grep('.bib', dir(path))]
+  listRefs[listRefs != 'library.bib']
+}
+
+readBibRefs  <-  function(individualBibs, path='~/bibtex_library/', verbose=TRUE) {
+  lapply(individualBibs, function(x, path, verbose) {
+    if(verbose) {
+      print(x)
+    }
+    read.bib(file.path(path, x))
+  }, path=path, verbose=verbose)
+}
+
+listBibs  <-  function() {
+  listRefs        <-  getIndividualBibs()
+  theRefs         <-  readBibRefs(listRefs)
+  names(theRefs)  <-  gsub('.bib', '', listRefs)
+  theRefs
+}
+
+exporBibs  <-  function(theRefs=listBibs(), libraryPath='../library.bib', erase=TRUE, verbose=TRUE) {
+  if(erase)
+    system(paste('rm -r', libraryPath))
+  if(!file.exists(libraryPath))
+    l_ply(theRefs, function(x, libraryPath, verbose) {
+      if(verbose) {
+        print(x)
+      }
+      write.bibtex(x, file=libraryPath, append=TRUE)
+    }, libraryPath=libraryPath, verbose=verbose)
+}
+
+myCite  <-  function(citationsVec) {
+  paste0('[@', paste0(citationsVec, collapse=';@'),']')
+}
+

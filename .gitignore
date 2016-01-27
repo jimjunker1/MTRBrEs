@@ -4,3 +4,4 @@ output/
 *.docx
 *.doc
 .Rapp.history
+library.bib
