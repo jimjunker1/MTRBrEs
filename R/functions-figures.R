@@ -57,6 +57,17 @@ rounded  <-  function(value, precision=1, change=FALSE) {
   sprintf(paste0('%.', precision, 'f'), round(value, precision))
 }
 
+whiteGrid  <-  function() {
+  label(rep(0.2, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5)
+  label(rep(0.4, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5)
+  label(rep(0.6, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5)
+  label(rep(0.8, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5)
+  label(c(0,1), rep(0.2, 2), text=FALSE, type='l', col='white', lwd=0.5)
+  label(c(0,1), rep(0.4, 2), text=FALSE, type='l', col='white', lwd=0.5)
+  label(c(0,1), rep(0.6, 2), text=FALSE, type='l', col='white', lwd=0.5)
+  label(c(0,1), rep(0.8, 2), text=FALSE, type='l', col='white', lwd=0.5)
+}
+
 ###############
 # PAPER FIGURES
 ###############
@@ -68,6 +79,12 @@ figureProp  <-  function(x, side='x') {
   }
   usr  <-  par('usr')
   (x-usr[n[1]])/(usr[n[2]]-usr[n[1]])
+}
+
+getProb  <-  function(densObjt) {
+  densObjt$y  <-  (densObjt$x[2:length(densObjt$x)] - densObjt$x[1:(length(densObjt$x)-1)]) * rowMeans(cbind(densObjt$y[2:length(densObjt$y)], densObjt$y[1:(length(densObjt$y)-1)]))
+  densObjt$x  <-  rowMeans(cbind(densObjt$x[2:length(densObjt$x)], densObjt$x[1:(length(densObjt$x)-1)]))
+  densObjt
 }
 
 plotTriad  <-  function(species=species[1], spNames=spNames[1], tmat, y1=TRUE, x1=TRUE, y2=TRUE, x2=TRUE) {
@@ -92,10 +109,8 @@ plotTriad  <-  function(species=species[1], spNames=spNames[1], tmat, y1=TRUE, x
     i25  <-  rowSums(tmat[, c('(Intercept)', paste0('Species', species), paste0('Species', species, ':Temp25'))])
   }
  
-  xDens10    <-  density(s10)
-  xDens10$y  <-  xDens10$y / length(xDens10$y)
-  xDens25    <-  density(s25)
-  xDens25$y  <-  xDens25$y / length(xDens25$y)
+  xDens10    <-  getProb(density(s10))
+  xDens25    <-  getProb(density(s25))
   
   if(y1) {
     y1  <-  substitute('Posterior probability '%*%' 10'^{-3})
@@ -121,12 +136,13 @@ plotTriad  <-  function(species=species[1], spNames=spNames[1], tmat, y1=TRUE, x
     x2  <-  ''
   }
 
-  plot(NA, xlab='', ylab='', xlim=c(-1, 2), ylim=c(0,0.0125), xpd=NA, type='l', axes=FALSE)
+  plot(NA, xlab='', ylab='', xlim=c(-1, 2), ylim=c(0,0.01), xpd=NA, type='l', axes=FALSE)
   label(-0.4, 0.5, y1, adj=c(0.5, 0.5), xpd=NA, srt=90)
   label(0.5, 1.4, x1, adj=c(0.5, 1), xpd=NA)
   usr  <-  par('usr')
   rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
-  axis(2, at=seq(0, 0.010, 0.005), labels=seq(0, 10, 5), las=1)
+  whiteGrid()
+  axis(2, at=seq(0, 0.008, 0.004), labels=seq(0, 8, 4), las=1)
   axis(3, at=seq(-1, 2, 1))
   box()
   polygon(c(xDens10$x, min(xDens10$x)), c(xDens10$y, min(xDens10$y)), border='dodgerblue2', col=make.transparent('dodgerblue2', 0.3))
@@ -146,6 +162,7 @@ plotTriad  <-  function(species=species[1], spNames=spNames[1], tmat, y1=TRUE, x
   plot(NA, xlim=c(-1, 2), ylim=c(-10, 5), las=1, ylab='', xlab='', axes=FALSE)
   usr  <-  par('usr')
   rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
+  whiteGrid()
   points(s10, i10, pch=16, col=make.transparent('dodgerblue2', 0.1))
   points(s25, i25, pch=16, col=make.transparent('tomato', 0.1))
   image(den3d10, col=make.transparent(col10, c(0, rep(0.1, 31))), add=TRUE)
@@ -153,17 +170,16 @@ plotTriad  <-  function(species=species[1], spNames=spNames[1], tmat, y1=TRUE, x
   box(bty='l', lty=2)
   box(bty='7')
 
-  xDens10    <-  density(i10)
-  xDens10$y  <-  xDens10$y / length(xDens10$y)
-  xDens25    <-  density(i25)
-  xDens25$y  <-  xDens25$y / length(xDens25$y)
-  plot(NA, xlab='', ylab='', xlim=c(0,0.0035), ylim=c(-10, 5), xpd=NA, type='l', axes=FALSE)
+  xDens10    <-  getProb(density(i10))
+  xDens25    <-  getProb(density(i25))
+  plot(NA, xlab='', ylab='', xlim=c(0,0.02), ylim=c(-10, 5), xpd=NA, type='l', axes=FALSE)
   label(0.5, -0.4, x2, adj=c(0.5, 0.5), xpd=NA)
   label(1.4, 0.5, y2, adj=c(0.5, 1), xpd=NA, srt=270)
   usr  <-  par('usr')
   rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
+  whiteGrid()
   axis(4, at=seq(-10, 5, 5), las=1)
-  axis(1, at=seq(0, 0.003, 0.001), labels=seq(0, 3, 1))
+  axis(1, seq(0, 0.018, 0.009), labels=seq(0, 18, 9))
   box()
   polygon(c(xDens10$y, min(xDens10$y)), c(xDens10$x, min(xDens10$x)), border='dodgerblue2', col=make.transparent('dodgerblue2', 0.3))
   polygon(c(xDens25$y, min(xDens25$y)), c(xDens25$x, min(xDens25$x)), border='tomato', col=make.transparent('tomato', 0.3))
@@ -188,13 +204,13 @@ fig2  <-  function() {
 
   figMat  <-  matrix(
                       c(
-                      rep(c(rep(1, 4), rep(2, 4), rep(5, 3), rep(6, 4), rep(7, 4)), 4),
-                      rep(c(rep(3, 4), rep(4, 4), rep(5, 3), rep(8, 4), rep(9, 4)), 4),
-                      rep(10, 57),
-                      rep(c(rep(11, 4), rep(12, 4), rep(15, 3), rep(16, 4), rep(17, 4)), 4),
-                      rep(c(rep(13, 4), rep(14, 4), rep(15, 3), rep(18, 4), rep(19, 4)), 4)
+                      rep(c(rep(1, 4), rep(2, 4), rep(5, 2), rep(6, 4), rep(7, 4)), 4),
+                      rep(c(rep(3, 4), rep(4, 4), rep(5, 2), rep(8, 4), rep(9, 4)), 4),
+                      rep(10, 36),
+                      rep(c(rep(11, 4), rep(12, 4), rep(15, 2), rep(16, 4), rep(17, 4)), 4),
+                      rep(c(rep(13, 4), rep(14, 4), rep(15, 2), rep(18, 4), rep(19, 4)), 4)
                       ),
-                      nrow=19, ncol=19, byrow=TRUE)
+                      nrow=18, ncol=18, byrow=TRUE)
 
   par(omi=rep(1, 4), mai=rep(0, 4), cex=1)
   layout(figMat)
