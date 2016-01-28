@@ -50,11 +50,6 @@ to.pdf <- function(expr, filename, ...) {
   to.dev(expr, pdf, filename, ...)
 }
 
-linearRescale <- function(x, r.out) {
-  p <- (x - min(x)) / (max(x) - min(x))
-  r.out[[1]] + p * (r.out[[2]] - r.out[[1]])
-}
-
 rounded  <-  function(value, precision=1, change=FALSE) {
   if(change) {
     value  <-  value * -1
@@ -62,94 +57,152 @@ rounded  <-  function(value, precision=1, change=FALSE) {
   sprintf(paste0('%.', precision, 'f'), round(value, precision))
 }
 
-###########################
-# SPECIES AS RANFOM EFFECTS
-###########################
-posteriorsBoltzmann  <-  function() {
-  par(mfrow=c(1, 2), mar=c(5.1,4.1,4.1,3), omi=c(0.5,1,0.5,1), cex=1)
-  theCol  <-  c('Hippopodina sp.'='dodgerblue2', 'Bugula neritina'='darkolivegreen3', 'Sponge'='tomato', 'Bugula stolinifera'='darkgoldenrod')
-
-  # mass
-  plot(NA, xlim=c(-1.5,2.5), ylim=c(0,1.5), xlab='Mass scaling', ylab='Posterior density', las=1)
-  for(i in 1:4) {
-    xDens  <-  density(rowSums(bfit$BUGSoutput$sims.matrix[,c('A', paste0('s[', i, ',1]'))]))
-    polygon(c(xDens$x, min(xDens$x)), c(xDens$y, min(xDens$y)), border=theCol[i], col=make.transparent(theCol[i], 0.3))
-    label(c(0.02, 0.07), rep(1-i*0.1, 2), text=FALSE, type='l', lwd=2, col=theCol[i])
-      label(0.08, 1-i*0.1, round(xDens$x[which.max(xDens$y)[1]], 2), adj=c(0, 0.5), cex=0.8)
+###############
+# PAPER FIGURES
+###############
+figureProp  <-  function(x, side='x') {
+  if(side == 'x') {
+    n  <-  1:2
+  } else {
+    n  <-  3:4
   }
-
-  # temperature
-  par(mar=c(5.1,1.1,4.1,6))
-  plot(NA, xlim=c(0,1.1), ylim=c(0,9), xlab='Temperature dependence', ylab='', las=1)
-  for(i in 1:4) {
-    xDens  <-  density(rowSums(bfit$BUGSoutput$sims.matrix[,c('Er', paste0('s[', i, ',3]'))]))
-    polygon(c(xDens$x, min(xDens$x)), c(xDens$y, min(xDens$y)), border=theCol[i], col=make.transparent(theCol[i], 0.3))
-    label(c(0.02, 0.07), rep(1-i*0.1, 2), text=FALSE, type='l', lwd=2, col=theCol[i])
-      label(0.08, 1-i*0.1, round(xDens$x[which.max(xDens$y)[1]], 2), adj=c(0, 0.5), cex=0.8)
-  }
-
-  # species color code
-  for(k in seq_along(theCol)) {
-    label(1.1, 1-k*0.1, text=FALSE, pch=21, col=theCol[k], bg=make.transparent(theCol[k], .5), adj=c(0.5, 0.5), xpd=NA)
-    label(1.15, 1-k*0.1, names(theCol)[k], adj=c(0, 0.5), xpd=NA, font=3)
-  }
+  usr  <-  par('usr')
+  (x-usr[n[1]])/(usr[n[2]]-usr[n[1]])
 }
 
-modelComparison  <-  function() {
+plotTriad  <-  function(species=species[1], spNames=spNames[1], tmat, y1=TRUE, x1=TRUE, y2=TRUE, x2=TRUE) {
+  col10     <-  colorRampPalette(rev(brewer.pal(9, 'Blues')))
+  col10     <-  col10(32)
+  col10[1]  <-  '#FFFFFF'
+  col25     <-  colorRampPalette(rev(brewer.pal(9, 'Reds')))
+  col25     <-  col25(32)
+  col25[1]  <-  '#FFFFFF'
+
+  # all species together - 3-way interaction
+  isReferenceSpecies  <-  species == 'Bryo'
+  if(isReferenceSpecies) {
+    s10  <-  tmat[, 'lnMass']
+    s25  <-  rowSums(tmat[, c('lnMass', 'lnMass:Temp25')])
+    i10  <-  tmat[, '(Intercept)']
+    i25  <-  rowSums(tmat[, c('(Intercept)', 'Temp25')])
+  } else {
+    s10  <-  rowSums(tmat[, c('lnMass', paste0('Species', species, ':', 'lnMass'))])
+    s25  <-  rowSums(tmat[, c('lnMass', 'lnMass:Temp25', paste0('Species', species, ':', 'lnMass:Temp25'))])
+    i10  <-  rowSums(tmat[, c('(Intercept)', paste0('Species', species))])
+    i25  <-  rowSums(tmat[, c('(Intercept)', paste0('Species', species), paste0('Species', species, ':Temp25'))])
+  }
+ 
+  xDens10    <-  density(s10)
+  xDens10$y  <-  xDens10$y / length(xDens10$y)
+  xDens25    <-  density(s25)
+  xDens25$y  <-  xDens25$y / length(xDens25$y)
+  
+  if(y1) {
+    y1  <-  substitute('Posterior probability '%*%' 10'^{-3})
+  } else {
+    y1  <-  ''
+  }
+
+  if(x1) {
+    x1  <-  substitute('Mass scaling exponent, '*italic(alpha))
+  } else {
+    x1  <-  ''
+  }
+
+  if(y2) {
+    y2  <-  substitute('Metabolic normalisation, '*italic('B'['o']))
+  } else {
+    y2  <-  ''
+  }
+
+  if(x2) {
+    x2  <-  substitute('Posterior probability '%*%' 10'^{-3})
+  } else {
+    x2  <-  ''
+  }
+
+  plot(NA, xlab='', ylab='', xlim=c(-1, 2), ylim=c(0,0.0125), xpd=NA, type='l', axes=FALSE)
+  label(-0.4, 0.5, y1, adj=c(0.5, 0.5), xpd=NA, srt=90)
+  label(0.5, 1.4, x1, adj=c(0.5, 1), xpd=NA)
+  usr  <-  par('usr')
+  rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
+  axis(2, at=seq(0, 0.010, 0.005), labels=seq(0, 10, 5), las=1)
+  axis(3, at=seq(-1, 2, 1))
+  box()
+  polygon(c(xDens10$x, min(xDens10$x)), c(xDens10$y, min(xDens10$y)), border='dodgerblue2', col=make.transparent('dodgerblue2', 0.3))
+  polygon(c(xDens25$x, min(xDens25$x)), c(xDens25$y, min(xDens25$y)), border='tomato', col=make.transparent('tomato', 0.3))
+  quants  <-  quantile(s10, probs=c(0.025, 0.975), type=2)
+  label(figureProp(quants), rep(0.95, 2), text=FALSE, type='l', col='dodgerblue2', lwd=1.2)
+  label(0.97, 0.95, rounded(mean(s10), 2), adj=c(1, 0.5), col='dodgerblue2', cex=0.8)
+  quants  <-  quantile(s25, probs=c(0.025, 0.975), type=2)
+  label(figureProp(quants), rep(0.86, 2), text=FALSE, type='l', col='tomato', lwd=1.2)
+  label(0.97, 0.86, rounded(mean(s25), 2), adj=c(1, 0.5), col='tomato', cex=0.8)
+
+  plot(0, 0, xlab='', ylab='', axes=FALSE, type='n')
+  label(0.5, 0.5, spNames, adj=c(0.5, 0.5), xpd=NA, cex=1.2)
+
+  den3d10  <-  kde2d(s10, i10, n=500)
+  den3d25  <-  kde2d(s25, i25, n=500)
+  plot(NA, xlim=c(-1, 2), ylim=c(-10, 5), las=1, ylab='', xlab='', axes=FALSE)
+  usr  <-  par('usr')
+  rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
+  points(s10, i10, pch=16, col=make.transparent('dodgerblue2', 0.1))
+  points(s25, i25, pch=16, col=make.transparent('tomato', 0.1))
+  image(den3d10, col=make.transparent(col10, c(0, rep(0.1, 31))), add=TRUE)
+  image(den3d25, col=make.transparent(col25, c(0, rep(0.1, 31))), add=TRUE)
+  box(bty='l', lty=2)
+  box(bty='7')
+
+  xDens10    <-  density(i10)
+  xDens10$y  <-  xDens10$y / length(xDens10$y)
+  xDens25    <-  density(i25)
+  xDens25$y  <-  xDens25$y / length(xDens25$y)
+  plot(NA, xlab='', ylab='', xlim=c(0,0.0035), ylim=c(-10, 5), xpd=NA, type='l', axes=FALSE)
+  label(0.5, -0.4, x2, adj=c(0.5, 0.5), xpd=NA)
+  label(1.4, 0.5, y2, adj=c(0.5, 1), xpd=NA, srt=270)
+  usr  <-  par('usr')
+  rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
+  axis(4, at=seq(-10, 5, 5), las=1)
+  axis(1, at=seq(0, 0.003, 0.001), labels=seq(0, 3, 1))
+  box()
+  polygon(c(xDens10$y, min(xDens10$y)), c(xDens10$x, min(xDens10$x)), border='dodgerblue2', col=make.transparent('dodgerblue2', 0.3))
+  polygon(c(xDens25$y, min(xDens25$y)), c(xDens25$x, min(xDens25$x)), border='tomato', col=make.transparent('tomato', 0.3))
+  quants  <-  quantile(i10, probs=c(0.025, 0.975), type=2)
+  label(rep(0.95, 2), figureProp(quants, 'y'), text=FALSE, type='l', col='dodgerblue2', lwd=1.2)
+  label(0.95, 0.15, rounded(mean(i10), 2), adj=c(1, 0.5), col='dodgerblue2', cex=0.8)
+  quants  <-  quantile(i25, probs=c(0.025, 0.975), type=2)
+  label(rep(0.86, 2), figureProp(quants, 'y'), text=FALSE, type='l', col='tomato', lwd=1.2)
+  label(0.86, 0.06, rounded(mean(i25), 2), adj=c(1, 0.5), col='tomato', cex=0.8)
+}
+
+fig2  <-  function() {
   tmat  <-  tfit$BUGSoutput$sims.matrix
-  tmat  <-  tmat[,paste0('beta[', seq_along(fixef(modelLmer)), ']')]
-  colnames(tmat)  <-  names(fixef(modelLmer))
+  tmat  <-  tmat[,paste0('beta[', seq_along(fixef(modelLmer1)), ']')]
+  colnames(tmat)  <-  names(fixef(modelLmer1))
   species  <-  unique(metRates$Species)
   # species real names
-  spNames  <-  c('Hippopodina sp.'='Bryo', 'Bugula neritina'='Bugula', 'Microcionidae'='Sponge', 'Bugula stolonifera'='Stolonifera')
+  spNames  <-  list(substitute(italic('Hippopodina')*' sp.'),
+                    'Microcionidae',
+                    substitute(italic('Bugula neritina')),
+                    substitute(italic('Bugula stolonifera')))
 
-  par(mfcol=c(2,4), omi=c(0.5, 0.5, 0, 0), mai=rep(0.3, 4))
-  for(j in seq_along(species)) {
-    # all species together - 3-way interaction
-    isReferenceSpecies  <-  species[j] == 'Bryo'
-    if(isReferenceSpecies) {
-      ylb  <-  'Rescaled [0,1] posterior density'
-      t10  <-  tmat[, 'lnMass']
-      t25  <-  rowSums(tmat[, c('lnMass', 'lnMass:Temp25')])
-    } else {
-      ylb  <-  ''
-      t10  <-  rowSums(tmat[, c('lnMass', paste0('Species', species[j], ':', 'lnMass'))])
-      t25  <-  rowSums(tmat[, c('lnMass', 'lnMass:Temp25', paste0('Species', species[j], ':', 'lnMass:Temp25'))])
-    }
-    
-    xDens10    <-  density(t10)
-    xDens10$y  <-  xDens10$y / max(xDens10$y)
-    xDens25    <-  density(t25)
-    xDens25$y  <-  xDens25$y / max(xDens25$y)
+  figMat  <-  matrix(
+                      c(
+                      rep(c(rep(1, 4), rep(2, 4), rep(5, 3), rep(6, 4), rep(7, 4)), 4),
+                      rep(c(rep(3, 4), rep(4, 4), rep(5, 3), rep(8, 4), rep(9, 4)), 4),
+                      rep(10, 57),
+                      rep(c(rep(11, 4), rep(12, 4), rep(15, 3), rep(16, 4), rep(17, 4)), 4),
+                      rep(c(rep(13, 4), rep(14, 4), rep(15, 3), rep(18, 4), rep(19, 4)), 4)
+                      ),
+                      nrow=19, ncol=19, byrow=TRUE)
 
-    # species separate
-    tmatb  <-  perSpeciesJagsFits[[species[j]]]$simsMatrix
-    t10b   <-  tmatb[, 'lnMass']
-    t25b   <-  rowSums(tmatb[, c('lnMass', 'lnMass:Temp25')])
-    
-    xDens10b    <-  density(t10b)
-    xDens10b$y  <-  xDens10b$y / max(xDens10b$y)
-    xDens25b    <-  density(t25b)
-    xDens25b$y  <-  xDens25b$y / max(xDens25b$y)
-
-    # fix xlim
-    xli        <-  range(c(xDens10$x, xDens10b$x, xDens25$x, xDens25b$x))
-    xli        <-  c(xli[1] - 0.05*(xli[2]-xli[1]), xli[2] + 0.05*(xli[2]-xli[1]))
-    plot(NA, xlab='', ylab=ylb, xlim=xli, ylim=c(0,1.2), las=1, xpd=NA, type='l')
-    polygon(c(xDens10$x, min(xDens10$x)), c(xDens10$y, min(xDens10$y)), border='dodgerblue2', col=make.transparent('dodgerblue2', 0.3))
-    polygon(c(xDens25$x, min(xDens25$x)), c(xDens25$y, min(xDens25$y)), border='tomato', col=make.transparent('tomato', 0.3))
-    label(c(0.03, 0.1), rep(0.93, 2), text=FALSE, col='tomato', lwd=1.2, adj=c(0, 0.5), type='l')
-    label(0.12, 0.93, round(xDens25$x[which.max(xDens25$y)[1]], 2), adj=c(0, 0.5), cex=0.7)
-    label(c(0.03, 0.1), rep(0.83, 2), text=FALSE, col='dodgerblue2', lwd=1.2, adj=c(0, 0.5), type='l')
-    label(0.12, 0.83, round(xDens10$x[which.max(xDens10$y)[1]], 2), adj=c(0, 0.5), cex=0.7)
-    label(0.95, 0.93, names(spNames)[grep(species[j], spNames)], font=3, adj=c(1, 0.5), cex=0.9)
-
-    plot(NA, xlab='Mass scaling', ylab=ylb, xlim=xli, ylim=c(0,1.2), las=1, xpd=NA, type='l')
-    polygon(c(xDens10b$x, min(xDens10b$x)), c(xDens10b$y, min(xDens10b$y)), border='dodgerblue2', col=make.transparent('dodgerblue2', 0.3))
-    polygon(c(xDens25b$x, min(xDens25b$x)), c(xDens25b$y, min(xDens25b$y)), border='tomato', col=make.transparent('tomato', 0.3))
-    label(c(0.03, 0.1), rep(0.93, 2), text=FALSE, col='tomato', lwd=1.2, adj=c(0, 0.5), type='l')
-    label(0.12, 0.93, round(xDens25b$x[which.max(xDens25b$y)[1]], 2), adj=c(0, 0.5), cex=0.7)
-    label(c(0.03, 0.1), rep(0.83, 2), text=FALSE, col='dodgerblue2', lwd=1.2, adj=c(0, 0.5), type='l')
-    label(0.12, 0.83, round(xDens10b$x[which.max(xDens10b$y)[1]], 2), adj=c(0, 0.5), cex=0.7)
-  }
+  par(omi=rep(1, 4), mai=rep(0, 4), cex=1)
+  layout(figMat)
+  plotTriad(species[1], spNames[[1]], tmat, x1=TRUE, y1=TRUE, x2=FALSE, y2=FALSE)
+  plot(0, 0, axes=FALSE, type='n', xlab='', ylab='')
+  plotTriad(species[2], spNames[[2]], tmat, x1=TRUE, y1=FALSE, x2=FALSE, y2=TRUE)
+  plot(0, 0, axes=FALSE, type='n', xlab='', ylab='')
+  plotTriad(species[3], spNames[[3]], tmat, x1=FALSE, y1=TRUE, x2=TRUE, y2=FALSE)
+  plot(0, 0, axes=FALSE, type='n', xlab='', ylab='')
+  plotTriad(species[4], spNames[[4]], tmat, x1=FALSE, y1=FALSE, x2=TRUE, y2=TRUE)
 }
