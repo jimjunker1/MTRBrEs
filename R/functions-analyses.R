@@ -34,10 +34,15 @@ modelJags  <-  function(species) {
 	bug.file[length(bug.file)+1]  <-  	'\t}'
 	bug.file[length(bug.file)+1]  <-  	'\ttauB  ~   dgamma(1.0E-3,1.0E-3)'
 	bug.file[length(bug.file)+1]  <-  	'\tvarB  <-  1/tauB # variance, equivalent to inverse(tauB)'
+	bug.file[length(bug.file)+1]  <-  	'\tfor(i in 1:max(plate)) { '
+	bug.file[length(bug.file)+1]  <-  	'\t\tr[i] ~ dnorm(0, tauR)'
+	bug.file[length(bug.file)+1]  <-  	'\t}'
+	bug.file[length(bug.file)+1]  <-  	'\ttauR  ~   dgamma(1.0E-3,1.0E-3)'
+	bug.file[length(bug.file)+1]  <-  	'\tvarR  <-  1/tauR # variance, equivalent to inverse(tauR)'
 	bug.file[length(bug.file)+1]  <-  	'\n\t#linear regression for metabolic rate'
 	bug.file[length(bug.file)+1]  <-  	'\tfor(i in 1:length(lnRate)) {'
 	bug.file[length(bug.file)+1]  <-  	'\t\tlnRate[i]  ~  dnorm(muB[i], tauB)'
-	bug.file[length(bug.file)+1]  <-  	'\t\tmuB[i]     <- inprod(beta[], jagsModelMatrix[i,])'
+	bug.file[length(bug.file)+1]  <-  	'\t\tmuB[i]     <- r[plate[i]] + inprod(beta[], jagsModelMatrix[i,])'
 	bug.file[length(bug.file)+1]  <-  	'\t}'
 	bug.file[length(bug.file)+1]  <-  	'\n}'
 	write(bug.file, paste0('model_two_way_interaction_', species, '.bug'))
@@ -48,9 +53,9 @@ perSpeciesJagsRun  <-  function(dat) {
 	dat$Plate   <-  as.factor(dat$Plate)
 	if(enoughRuns) {
 		dat$Run      <-  as.factor(dat$Run)
-		modelMatrix  <-  model.matrix(~ Plate + Run + lnMass * Temp, data=dat, contrasts=list(Run='contr.sum', Plate='contr.sum'))
+		modelMatrix  <-  model.matrix(~ Run + lnMass * Temp, data=dat, contrasts=list(Run='contr.sum'))
 	} else {
-		modelMatrix  <-  model.matrix(~ Plate + lnMass * Temp, data=dat, contrasts=list(Plate='contr.sum'))
+		modelMatrix  <-  model.matrix(~ lnMass * Temp, data=dat)
 	}
 
 	species   <-  unique(dat$Species)
@@ -59,8 +64,8 @@ perSpeciesJagsRun  <-  function(dat) {
 	modelJags(species)
 	set.seed(1)
 	K      <-  ncol(modelMatrix)
-	tJags  <-  list('lnRate'=dat$lnRate, 'jagsModelMatrix'=modelMatrix, 'K'=K)
-	tfit   <-  jags(data=tJags, parameters.to.save=c('varB', paste0('beta[', seq_len(K), ']')), model.file=bugsFile, n.chains=3, n.iter=5e5, DIC=TRUE, n.thin=250)
+	tJags  <-  list('lnRate'=dat$lnRate, 'jagsModelMatrix'=modelMatrix, 'K'=K, 'plate'=as.numeric(dat$Plate))
+	tfit   <-  jags(data=tJags, parameters.to.save=c('varB', paste0('beta[', seq_len(K), ']'), paste0('r[', seq_len(length(unique(dat$Plate))), ']')), model.file=bugsFile, n.chains=3, n.iter=5e5, DIC=TRUE, n.thin=250)
 	tfit   <-  autojags(tfit, n.iter=5e5, n.thin=250, n.update=100)
 	simsMatrix  <-  tfit$BUGSoutput$sims.matrix
 	colNames    <-  grep('beta', colnames(simsMatrix), value=TRUE)

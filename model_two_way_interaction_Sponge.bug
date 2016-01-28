@@ -6,11 +6,16 @@ model {
 	}
 	tauB  ~   dgamma(1.0E-3,1.0E-3)
 	varB  <-  1/tauB # variance, equivalent to inverse(tauB)
+	for(i in 1:max(plate)) { 
+		r[i] ~ dnorm(0, tauR)
+	}
+	tauR  ~   dgamma(1.0E-3,1.0E-3)
+	varR  <-  1/tauR # variance, equivalent to inverse(tauR)
 
 	#linear regression for metabolic rate
 	for(i in 1:length(lnRate)) {
 		lnRate[i]  ~  dnorm(muB[i], tauB)
-		muB[i]     <- inprod(beta[], jagsModelMatrix[i,])
+		muB[i]     <- r[plate[i]] + inprod(beta[], jagsModelMatrix[i,])
 	}
 
 }
