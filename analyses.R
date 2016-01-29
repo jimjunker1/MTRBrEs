@@ -66,5 +66,5 @@ for(i in 1:4) {
 }
 plot(comparedOutputs$lme4Coefs, comparedOutputs$jagsCoefs)
 
-rm(list=ls()[!(ls() %in% c('modelLmer1', 'tfit', 'tjagsModelMatrix', 'tjagsout', 'tfit2', 'tjagsModelMatrix2', 'tjagsout2', 'perSpeciesLmFits', 'perSpeciesJagsFits'))])
+rm(list=ls()[!(ls() %in% c('metRates', 'modelLmer1', 'tfit', 'tjagsModelMatrix', 'tjagsout', 'tfit2', 'tjagsModelMatrix2', 'tjagsout2', 'perSpeciesLmFits', 'perSpeciesJagsFits'))])
 save.image('output/RDatafiles/analyses.RData')
