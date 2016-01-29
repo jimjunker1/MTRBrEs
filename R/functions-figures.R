@@ -87,7 +87,7 @@ getProb  <-  function(densObjt) {
   densObjt
 }
 
-plotTriad  <-  function(species=species[1], spNames=spNames[1], tmat, y1=TRUE, x1=TRUE, y2=TRUE, x2=TRUE) {
+plotTriad  <-  function(species=species, spNames=spNames, tmat, y1=TRUE, x1=TRUE, y2=TRUE, x2=TRUE, y3=TRUE, x3=TRUE) {
   col10     <-  colorRampPalette(rev(brewer.pal(9, 'Blues')))
   col10     <-  col10(32)
   col10[1]  <-  '#FFFFFF'
@@ -98,15 +98,15 @@ plotTriad  <-  function(species=species[1], spNames=spNames[1], tmat, y1=TRUE, x
   # all species together - 3-way interaction
   isReferenceSpecies  <-  species == 'Bryo'
   if(isReferenceSpecies) {
-    s10  <-  tmat[, 'lnMass']
-    s25  <-  rowSums(tmat[, c('lnMass', 'lnMass:Temp25')])
     i10  <-  tmat[, '(Intercept)']
+    s10  <-  tmat[, 'lnMass']
     i25  <-  rowSums(tmat[, c('(Intercept)', 'Temp25')])
+    s25  <-  rowSums(tmat[, c('lnMass', 'lnMass:Temp25')])
   } else {
-    s10  <-  rowSums(tmat[, c('lnMass', paste0('Species', species, ':', 'lnMass'))])
-    s25  <-  rowSums(tmat[, c('lnMass', 'lnMass:Temp25', paste0('Species', species, ':', 'lnMass:Temp25'))])
     i10  <-  rowSums(tmat[, c('(Intercept)', paste0('Species', species))])
-    i25  <-  rowSums(tmat[, c('(Intercept)', paste0('Species', species), paste0('Species', species, ':Temp25'))])
+    s10  <-  rowSums(tmat[, c('lnMass', paste0('Species', species, ':', 'lnMass'))])
+    i25  <-  rowSums(tmat[, c('(Intercept)', paste0('Species', species), 'Temp25', paste0('Species', species, ':Temp25'))])
+    s25  <-  rowSums(tmat[, c('lnMass', paste0('Species', species, ':', 'lnMass'), 'lnMass:Temp25', paste0('Species', species, ':', 'lnMass:Temp25'))])
   }
  
   xDens10    <-  getProb(density(s10))
@@ -136,6 +136,18 @@ plotTriad  <-  function(species=species[1], spNames=spNames[1], tmat, y1=TRUE, x
     x2  <-  ''
   }
 
+  if(y3) {
+    y3  <-  substitute('Metabolic rates, '*italic('B'['i']))
+  } else {
+    y3  <-  ''
+  }
+
+  if(x3) {
+    x3  <-  'ln Mass (mg)'
+  } else {
+    x3  <-  ''
+  }
+
   plot(NA, xlab='', ylab='', xlim=c(-1, 2), ylim=c(0,0.01), xpd=NA, type='l', axes=FALSE)
   label(-0.4, 0.5, y1, adj=c(0.5, 0.5), xpd=NA, srt=90)
   label(0.5, 1.4, x1, adj=c(0.5, 1), xpd=NA)
@@ -154,8 +166,25 @@ plotTriad  <-  function(species=species[1], spNames=spNames[1], tmat, y1=TRUE, x
   label(figureProp(quants), rep(0.86, 2), text=FALSE, type='l', col='tomato', lwd=1.2)
   label(0.97, 0.86, rounded(mean(s25), 2), adj=c(1, 0.5), col='tomato', cex=0.8)
 
-  plot(0, 0, xlab='', ylab='', axes=FALSE, type='n')
-  label(0.5, 0.5, spNames, adj=c(0.5, 0.5), xpd=NA, cex=1.2)
+  dat         <-  metRates[metRates$Species == species, ]
+  dat$colors  <-  c('dodgerblue2', 'tomato')[match(dat$TempK, c(283.15, 298.15))]
+  plot(NA, xlab='', ylab='', xlim=c(-1, 7), ylim=c(-6, 6), axes=FALSE, type='n')
+  usr  <-  par('usr')
+  rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
+  whiteGrid()  
+  points(dat$lnRate ~ dat$lnMass, pch=16, col=make.transparent(dat$colors, 0.6))
+  label(1.4, 0.5, y3, adj=c(0.5, 1), xpd=NA, srt=270)
+  label(0.5, 1.4, x3, adj=c(0.5, 1), xpd=NA)
+  axis(4, at=seq(-5, 5, 5), las=1)
+  axis(3, at=seq(0, 6, 2))
+  box()
+  xpts  <-  range(dat$lnMass[dat$TempK == 283.15])
+  lines(xpts, mean(i10) + mean(s10)*xpts, lwd=2.3)
+  lines(xpts, mean(i10) + mean(s10)*xpts, col='dodgerblue2', lwd=2)
+  xpts  <-  range(dat$lnMass[dat$TempK == 298.15])
+  lines(xpts, mean(i25) + mean(s25)*xpts, lwd=2.3)
+  lines(xpts, mean(i25) + mean(s25)*xpts, col='tomato', lwd=2)
+  label(0.03, 0.9, spNames, adj=c(0, 0.5), xpd=NA, cex=1)
 
   den3d10  <-  kde2d(s10, i10, n=500)
   den3d25  <-  kde2d(s25, i25, n=500)
@@ -172,14 +201,14 @@ plotTriad  <-  function(species=species[1], spNames=spNames[1], tmat, y1=TRUE, x
 
   xDens10    <-  getProb(density(i10))
   xDens25    <-  getProb(density(i25))
-  plot(NA, xlab='', ylab='', xlim=c(0,0.02), ylim=c(-10, 5), xpd=NA, type='l', axes=FALSE)
+  plot(NA, xlab='', ylab='', xlim=c(0,0.025), ylim=c(-10, 5), xpd=NA, type='l', axes=FALSE)
   label(0.5, -0.4, x2, adj=c(0.5, 0.5), xpd=NA)
   label(1.4, 0.5, y2, adj=c(0.5, 1), xpd=NA, srt=270)
   usr  <-  par('usr')
   rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
   whiteGrid()
   axis(4, at=seq(-10, 5, 5), las=1)
-  axis(1, seq(0, 0.018, 0.009), labels=seq(0, 18, 9))
+  axis(1, seq(0, 0.02, 0.01), labels=seq(0, 20, 10))
   box()
   polygon(c(xDens10$y, min(xDens10$y)), c(xDens10$x, min(xDens10$x)), border='dodgerblue2', col=make.transparent('dodgerblue2', 0.3))
   polygon(c(xDens25$y, min(xDens25$y)), c(xDens25$x, min(xDens25$x)), border='tomato', col=make.transparent('tomato', 0.3))
@@ -214,11 +243,11 @@ fig2  <-  function() {
 
   par(omi=rep(1, 4), mai=rep(0, 4), cex=1)
   layout(figMat)
-  plotTriad(species[1], spNames[[1]], tmat, x1=TRUE, y1=TRUE, x2=FALSE, y2=FALSE)
+  plotTriad(species[1], spNames[[1]], tmat, x1=TRUE, y1=TRUE, x2=FALSE, y2=FALSE, x3=TRUE, y3=FALSE)
   plot(0, 0, axes=FALSE, type='n', xlab='', ylab='')
-  plotTriad(species[2], spNames[[2]], tmat, x1=TRUE, y1=FALSE, x2=FALSE, y2=TRUE)
+  plotTriad(species[2], spNames[[2]], tmat, x1=TRUE, y1=FALSE, x2=FALSE, y2=TRUE, x3=TRUE, y3=TRUE)
   plot(0, 0, axes=FALSE, type='n', xlab='', ylab='')
-  plotTriad(species[3], spNames[[3]], tmat, x1=FALSE, y1=TRUE, x2=TRUE, y2=FALSE)
+  plotTriad(species[3], spNames[[3]], tmat, x1=FALSE, y1=TRUE, x2=TRUE, y2=FALSE, x3=FALSE, y3=FALSE)
   plot(0, 0, axes=FALSE, type='n', xlab='', ylab='')
-  plotTriad(species[4], spNames[[4]], tmat, x1=FALSE, y1=FALSE, x2=TRUE, y2=TRUE)
+  plotTriad(species[4], spNames[[4]], tmat, x1=FALSE, y1=FALSE, x2=TRUE, y2=TRUE, x3=FALSE, y3=TRUE)
 }

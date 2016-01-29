@@ -8,7 +8,6 @@ loadfonts()
 rm(list=ls())
 source('paths.R')
 source('R/functions-figures.R')
-source('dataManipulation.R')
 load('output/RDatafiles/analyses.RData')
 
 to.pdf(fig2(), 'output/figures/fig2.pdf', width=8, height=7)
