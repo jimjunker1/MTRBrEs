@@ -125,7 +125,7 @@ plotTriad  <-  function(species=species, spNames=spNames, tmat, y1=TRUE, x1=TRUE
   }
 
   if(y2) {
-    y2  <-  substitute('Metabolic normalisation, '*italic('B'['o']))
+    y2  <-  substitute('ln '*italic('B'['o'])*' (units?)')
   } else {
     y2  <-  ''
   }
@@ -137,13 +137,13 @@ plotTriad  <-  function(species=species, spNames=spNames, tmat, y1=TRUE, x1=TRUE
   }
 
   if(y3) {
-    y3  <-  substitute('Metabolic rates, '*italic('B'['i']))
+    y3  <-  substitute('ln Rates, '*italic('B'['i'])*' (units?)')
   } else {
     y3  <-  ''
   }
 
   if(x3) {
-    x3  <-  'ln Mass (mg)'
+    x3  <-  substitute('ln Mass, '*italic('M'['i'])*' (mg)')
   } else {
     x3  <-  ''
   }
@@ -220,7 +220,7 @@ plotTriad  <-  function(species=species, spNames=spNames, tmat, y1=TRUE, x1=TRUE
   label(0.86, 0.06, rounded(mean(i25), 2), adj=c(1, 0.5), col='tomato', cex=0.8)
 }
 
-fig2  <-  function() {
+fig1  <-  function() {
   tmat  <-  tfit$BUGSoutput$sims.matrix
   tmat  <-  tmat[,paste0('beta[', seq_along(fixef(modelLmer1)), ']')]
   colnames(tmat)  <-  names(fixef(modelLmer1))
