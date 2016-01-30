@@ -11,71 +11,6 @@ rmFcts  <-  function(filename) {
   rm(list=ls(.GlobalEnv)[ls(.GlobalEnv) %in% fct_files], envir=.GlobalEnv)
 }
 
-############
-# MODEL FITS
-############
-perSpeciesLmRun  <-  function(dat) {
-	enoughRuns  <-  length(unique(dat$Run)) > 1
-	dat$Plate   <-  as.factor(dat$Plate)
-	if(enoughRuns) {
-		dat$Run    <-  as.factor(dat$Run)		
-		lm(lnRate ~ Plate + Run + lnMass * Temp, data=dat, contrasts=list(Run='contr.sum', Plate='contr.sum'))
-	} else {
-		lm(lnRate ~ Plate + lnMass * Temp, data=dat, contrasts=list(Plate='contr.sum'))
-	}
-}
-
-modelJags  <-  function(species) {
-	bug.file                      <-  vector(mode='character')
-	bug.file[length(bug.file)+1]  <-  	'model {'
-	bug.file[length(bug.file)+1]  <-  	'\n\t# priors for fixed effects in metabolic rate analysis'
-	bug.file[length(bug.file)+1]  <-  	'\tfor(i in 1:K) { '
-	bug.file[length(bug.file)+1]  <-  	'\t\tbeta[i] ~ dnorm(0, 0.0001)'
-	bug.file[length(bug.file)+1]  <-  	'\t}'
-	bug.file[length(bug.file)+1]  <-  	'\ttauB  ~   dgamma(1.0E-3,1.0E-3)'
-	bug.file[length(bug.file)+1]  <-  	'\tvarB  <-  1/tauB # variance, equivalent to inverse(tauB)'
-	bug.file[length(bug.file)+1]  <-  	'\tfor(i in 1:max(plate)) { '
-	bug.file[length(bug.file)+1]  <-  	'\t\tr[i] ~ dnorm(0, tauR)'
-	bug.file[length(bug.file)+1]  <-  	'\t}'
-	bug.file[length(bug.file)+1]  <-  	'\ttauR  ~   dgamma(1.0E-3,1.0E-3)'
-	bug.file[length(bug.file)+1]  <-  	'\tvarR  <-  1/tauR # variance, equivalent to inverse(tauR)'
-	bug.file[length(bug.file)+1]  <-  	'\n\t#linear regression for metabolic rate'
-	bug.file[length(bug.file)+1]  <-  	'\tfor(i in 1:length(lnRate)) {'
-	bug.file[length(bug.file)+1]  <-  	'\t\tlnRate[i]  ~  dnorm(muB[i], tauB)'
-	bug.file[length(bug.file)+1]  <-  	'\t\tmuB[i]     <- r[plate[i]] + inprod(beta[], jagsModelMatrix[i,])'
-	bug.file[length(bug.file)+1]  <-  	'\t}'
-	bug.file[length(bug.file)+1]  <-  	'\n}'
-	write(bug.file, paste0('model_two_way_interaction_', species, '.bug'))
-}
-
-perSpeciesJagsRun  <-  function(dat) {
-	enoughRuns  <-  length(unique(dat$Run)) > 1
-	dat$Plate   <-  as.factor(dat$Plate)
-	if(enoughRuns) {
-		dat$Run      <-  as.factor(dat$Run)
-		modelMatrix  <-  model.matrix(~ Run + lnMass * Temp, data=dat, contrasts=list(Run='contr.sum'))
-	} else {
-		modelMatrix  <-  model.matrix(~ lnMass * Temp, data=dat)
-	}
-
-	species   <-  unique(dat$Species)
-	bugsFile  <-  paste0('model_two_way_interaction_', species, '.bug')
-	
-	modelJags(species)
-	set.seed(1)
-	K      <-  ncol(modelMatrix)
-	tJags  <-  list('lnRate'=dat$lnRate, 'jagsModelMatrix'=modelMatrix, 'K'=K, 'plate'=as.numeric(dat$Plate))
-	tfit   <-  jags(data=tJags, parameters.to.save=c('varB', paste0('beta[', seq_len(K), ']'), paste0('r[', seq_len(length(unique(dat$Plate))), ']')), model.file=bugsFile, n.chains=3, n.iter=5e5, DIC=TRUE, n.thin=250)
-	tfit   <-  autojags(tfit, n.iter=5e5, n.thin=250, n.update=100)
-	simsMatrix  <-  tfit$BUGSoutput$sims.matrix
-	colNames    <-  grep('beta', colnames(simsMatrix), value=TRUE)
-	colnames(simsMatrix)[match(colNames, paste0('beta[', seq_len(K), ']'))]  <-  colnames(modelMatrix)
-	jagsOutput  <-  tfit$BUGSoutput$summary
-	rowNames    <-  grep('beta', rownames(jagsOutput), value=TRUE)
-	rownames(jagsOutput)[match(rowNames, paste0('beta[', seq_len(K), ']'))]  <-  colnames(modelMatrix)
-	list(simsMatrix=simsMatrix, jagsOutput=jagsOutput)
-}
-
 #############################
 # DEALING WITH BIB REFERENCES
 #############################
@@ -116,3 +51,27 @@ myCite  <-  function(citationsVec) {
   paste0('[@', paste0(citationsVec, collapse=';@'),']')
 }
 
+###############
+# PAPER NUMBERS
+###############
+getTempDeltas   <-  function(species) {
+	tmat  <-  tfit$BUGSoutput$sims.matrix
+	tmat  <-  tmat[, paste0('beta[', seq_along(fixef(modelLmer1)), ']')]
+	colnames(tmat)  <-  names(fixef(modelLmer1))
+
+	isReferenceSpecies  <-  species == 'Bryo'
+	if(isReferenceSpecies) {
+		i10  <-  tmat[, '(Intercept)']
+		s10  <-  tmat[, 'lnMass']
+		i25  <-  rowSums(tmat[, c('(Intercept)', 'Temp25')])
+		s25  <-  rowSums(tmat[, c('lnMass', 'lnMass:Temp25')])
+	} else {
+		i10  <-  rowSums(tmat[, c('(Intercept)', paste0('Species', species))])
+		s10  <-  rowSums(tmat[, c('lnMass', paste0('Species', species, ':', 'lnMass'))])
+		i25  <-  rowSums(tmat[, c('(Intercept)', paste0('Species', species), 'Temp25', paste0('Species', species, ':Temp25'))])
+		s25  <-  rowSums(tmat[, c('lnMass', paste0('Species', species, ':', 'lnMass'), 'lnMass:Temp25', paste0('Species', species, ':', 'lnMass:Temp25'))])
+	}
+	
+	# deltas between temperatures
+	data.frame(species=species, tempDelta=(exp(mean(i25) + mean(s25)*2) / exp(mean(i10) + mean(s10)*2)) / (exp(mean(i25) + mean(s25)*5) / exp(mean(i10) + mean(s10)*5)), stringsAsFactors=FALSE)
+}
