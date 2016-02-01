@@ -6,12 +6,16 @@ source('paths.R')
 source('dataManipulation.R')
 source('R/functions-analyses.R')
 
-# test for significance of fixed effects
+# quickly test for significance of fixed effects using lme4
 modelLmer1  <-  lmer(lnRate ~ Species * lnMass * Temp + (1 | Run) + (1 | Plate), data=metRates, REML=TRUE)
 modelLmer2  <-  lmer(lnRate ~ Species + lnMass * Temp + (1 | Run) + (1 | Plate), data=metRates, REML=TRUE)
 modelLmer3  <-  lmer(lnRate ~ lnMass * Temp + (1 | Run) + (1 | Plate), data=metRates, REML=TRUE)
 modelLmer4  <-  lmer(lnRate ~ Temp + (1 | Run) + (1 | Plate), data=metRates, REML=TRUE)
+modelLmer5  <-  lmer(lnRate ~ Species * Temp + lnMass + (1 | Run) + (1 | Plate), data=metRates, REML=TRUE)
+modelLmer6  <-  lmer(lnRate ~ Species * lnMass + Temp + (1 | Run) + (1 | Plate), data=metRates, REML=TRUE)
 anova(modelLmer1, modelLmer2, modelLmer3, modelLmer4) # all significant fixed effects
+anova(modelLmer1, modelLmer5) # three-way significantly better
+anova(modelLmer1, modelLmer6) # three-way significantly better
 
 # asses confidence intervals for model parameters
 confint.merMod(modelLmer1)
