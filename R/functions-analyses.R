@@ -54,24 +54,75 @@ myCite  <-  function(citationsVec) {
 ###############
 # PAPER NUMBERS
 ###############
-getTempDeltas   <-  function(species) {
-	tmat  <-  tfit$BUGSoutput$sims.matrix
-	tmat  <-  tmat[, paste0('beta[', seq_along(fixef(modelLmer1)), ']')]
-	colnames(tmat)  <-  names(fixef(modelLmer1))
-
-	isReferenceSpecies  <-  species == 'Bryo'
-	if(isReferenceSpecies) {
-		i10  <-  tmat[, '(Intercept)']
-		s10  <-  tmat[, 'lnMass']
-		i25  <-  rowSums(tmat[, c('(Intercept)', 'Temp25')])
-		s25  <-  rowSums(tmat[, c('lnMass', 'lnMass:Temp25')])
-	} else {
-		i10  <-  rowSums(tmat[, c('(Intercept)', paste0('Species', species))])
-		s10  <-  rowSums(tmat[, c('lnMass', paste0('Species', species, ':', 'lnMass'))])
-		i25  <-  rowSums(tmat[, c('(Intercept)', paste0('Species', species), 'Temp25', paste0('Species', species, ':Temp25'))])
-		s25  <-  rowSums(tmat[, c('lnMass', paste0('Species', species, ':', 'lnMass'), 'lnMass:Temp25', paste0('Species', species, ':', 'lnMass:Temp25'))])
-	}
-	
-	# deltas between temperatures
-	data.frame(species=species, tempDelta=(exp(mean(i25) + mean(s25)*2) / exp(mean(i10) + mean(s10)*2)) / (exp(mean(i25) + mean(s25)*5) / exp(mean(i10) + mean(s10)*5)), stringsAsFactors=FALSE)
+cleanJagsSummary  <-  function(jagsSummary=tfit$BUGSoutput$summary, modelMatrix=modelLmer1) {
+  jagsMat            <-  jagsSummary[paste0('beta[', seq_along(fixef(modelMatrix)), ']'), ]
+  rownames(jagsMat)  <-  names(fixef(modelMatrix))
+  jagsMat
 }
+
+cleanJagsMatrix  <-  function(jagsMatrix=tfit$BUGSoutput$sims.matrix, modelMatrix=modelLmer1) {
+  jagsMat            <-  jagsMatrix[, paste0('beta[', seq_along(fixef(modelMatrix)), ']')]
+  colnames(jagsMat)  <-  names(fixef(modelMatrix))
+  jagsMat
+}
+
+get95CIEstimates  <-  function(species) {
+  jagsMat  <-  cleanJagsMatrix()
+  isReferenceSpecies  <-  species == 'Bryo'
+  if(isReferenceSpecies) {
+    lnB10  <-  jagsMat[, '(Intercept)']
+    s10    <-  jagsMat[, 'lnMass']
+    lnB25  <-  rowSums(jagsMat[, c('(Intercept)', 'Temp25')])
+    s25    <-  rowSums(jagsMat[, c('lnMass', 'lnMass:Temp25')])
+  } else {
+    lnB10  <-  rowSums(jagsMat[, c('(Intercept)', paste0('Species', species))])
+    s10    <-  rowSums(jagsMat[, c('lnMass', paste0('Species', species, ':', 'lnMass'))])
+    lnB25  <-  rowSums(jagsMat[, c('(Intercept)', paste0('Species', species), 'Temp25', paste0('Species', species, ':Temp25'))])
+    s25    <-  rowSums(jagsMat[, c('lnMass', paste0('Species', species, ':', 'lnMass'), 'lnMass:Temp25', paste0('Species', species, ':', 'lnMass:Temp25'))])
+  }
+  data.frame(species=species, 
+             'lnB10_2.5'  = quantile(lnB10, probs=0.025, type=2),
+             'lnB10_97.5' = quantile(lnB10, probs=0.975, type=2),
+             's10_2.5'    = quantile(s10,   probs=0.025, type=2),
+             's10_97.5'   = quantile(s10,   probs=0.975, type=2),
+             'lnB25_2.5'  = quantile(lnB25, probs=0.025, type=2),
+             'lnB25_97.5' = quantile(lnB25, probs=0.975, type=2),
+             's25_2.5'    = quantile(s25,   probs=0.025, type=2),
+             's25_97.5'   = quantile(s25,   probs=0.975, type=2),
+             stringsAsFactors=FALSE)
+}
+
+getAverageEstimates  <-  function(species) {
+  jagsMat  <-  cleanJagsSummary()
+  isReferenceSpecies  <-  species == 'Bryo'
+  if(isReferenceSpecies) {
+    lnB10  <-  jagsMat['(Intercept)', 'mean']
+    s10    <-  jagsMat['lnMass', 'mean']
+    lnB25  <-  sum(jagsMat[c('(Intercept)', 'Temp25'), 'mean'])
+    s25    <-  sum(jagsMat[c('lnMass', 'lnMass:Temp25'), 'mean'])
+  } else {
+    lnB10  <-  sum(jagsMat[c('(Intercept)', paste0('Species', species)), 'mean'])
+    s10    <-  sum(jagsMat[c('lnMass', paste0('Species', species, ':', 'lnMass')), 'mean'])
+    lnB25  <-  sum(jagsMat[c('(Intercept)', paste0('Species', species), 'Temp25', paste0('Species', species, ':Temp25')), 'mean'])
+    s25    <-  sum(jagsMat[c('lnMass', paste0('Species', species, ':', 'lnMass'), 'lnMass:Temp25', paste0('Species', species, ':', 'lnMass:Temp25')), 'mean'])
+  }
+  data.frame(species=species, lnB10=lnB10, s10=s10, lnB25=lnB25, s25=s25, stringsAsFactors=FALSE)
+}
+
+getTempDeltas   <-  function(averageEstimates) {
+	# deltas between temperatures
+	data.frame(species=averageEstimates$species, tempDelta=(exp(mean(averageEstimates$lnB25) + mean(averageEstimates$s25)*2) / exp(mean(averageEstimates$lnB10) + mean(averageEstimates$s10)*2)) / (exp(mean(averageEstimates$lnB25) + mean(averageEstimates$s25)*5) / exp(mean(averageEstimates$lnB10) + mean(averageEstimates$s10)*5)), stringsAsFactors=FALSE)
+}
+
+getErEquivalent  <-  function(temp1Kelvin, temp2Kelvin, q10, k=8.62e-5) {
+  (k*temp1Kelvin*temp2Kelvin*((temp2Kelvin-temp1Kelvin)/10)*log(q10))/(temp2Kelvin-temp1Kelvin)
+}
+
+getq10andEr  <-  function(averageEstimates) {
+  # this function, as currently written, cannot be used for Bugula neritina nor Hippopodina sp., because they have interacting slopes between 10 and 25 ˚C
+  q10       <-  (exp(averageEstimates$lnB25) / exp(averageEstimates$lnB10)) ^ (10/(25-10))
+  er        <-  getErEquivalent(283.15, 298.15, q10)
+  q10Boltz  <-  (exp(-er / (8.62e-5 * 298.15)) / exp(-er / (8.62e-5 * 283.15))) ^ (10/(25-10)) # equivalent in Boltzmann terms
+  data.frame(species=averageEstimates$species, q10=q10, er=er, stringsAsFactors=FALSE)
+}
+
