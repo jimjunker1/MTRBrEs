@@ -52,17 +52,92 @@ myCite  <-  function(citationsVec) {
 }
 
 ###############
+# DATA ANALYSIS
+###############
+jagsModel  <-  function(run=TRUE, outputFileName) {
+  jmod                                <-  vector(mode='character')
+  jmod[(length(jmod) + 1)]  <-  'model {'
+  jmod[(length(jmod) + 1)]  <-  '\t# priors for fixed effects in metabolic rate analysis'
+  jmod[(length(jmod) + 1)]  <-  '\tfor (i in 1:K) {'
+  jmod[(length(jmod) + 1)]  <-  '\t\tbeta[i] ~ dnorm(0, 0.0001)'
+  jmod[(length(jmod) + 1)]  <-  '\t}'
+  jmod[(length(jmod) + 1)]  <-  '\ttauB  ~   dgamma(1.0E-3,1.0E-3)'
+  jmod[(length(jmod) + 1)]  <-  '\tvarB  <-  1/tauB # variance, equivalent to inverse(tauB)'
+  jmod[(length(jmod) + 1)]  <-  '\n\t#linear regression for metabolic rate'
+  jmod[(length(jmod) + 1)]  <-  '\tfor(i in 1:length(lnRate)) {'
+  jmod[(length(jmod) + 1)]  <-  '\t\tlnRate[i]  ~  dnorm(muB[i], tauB)'
+  jmod[(length(jmod) + 1)]  <-  '\t\tmuB[i]  <-  inprod(beta[], tjagsModelMatrix[i,])'
+  jmod[(length(jmod) + 1)]  <-  '\t\tlogLik[i]  <- - log(tauB) + log(2*pi)  + pow(lnRate[i]-muB[i],2) * tauB'
+  jmod[(length(jmod) + 1)]  <-  '\t}'
+  
+  if(run) {
+      jmod                      <-  sub('muB[i]  <-  ', 'muB[i]  <-  r[runJ[i]] + ', jmod, fixed=TRUE)
+      jmod[(length(jmod) + 1)]  <-  '\n\t# priors for random effects at the run level'
+      jmod[(length(jmod) + 1)]  <-  '\tfor(i in 1:max(runJ)) {'
+      jmod[(length(jmod) + 1)]  <-  '\t\tr[i] ~ dnorm(0, tauR)'
+      jmod[(length(jmod) + 1)]  <-  '\t}'
+      jmod[(length(jmod) + 1)]  <-  '\ttauR  ~   dgamma(1.0E-3,1.0E-3)'
+      jmod[(length(jmod) + 1)]  <-  '\tvarR  <-  1/tauR # variance, equivalent to inverse(tauR)'
+  }
+  jmod[(length(jmod) + 1)]  <-  '\n}'
+  write(jmod, outputFileName)
+}
+
+fitJags  <-  function(lmModelMatrix, run=TRUE, data=metRates, outputFileName='mod.bug') {
+  # fitting an interaction model
+  # first extract model matrix from lm model
+  tjagsModelMatrix  <-  model.matrix(lmModelMatrix)
+  K                 <-  ncol(tjagsModelMatrix)
+  set.seed(1)
+  parToSave  <-  c('varB', paste0('beta[', seq_len(K), ']'), paste0('logLik[', seq_len(nrow(tjagsModelMatrix)), ']'))
+  lnRate     <-  data$lnRate
+  tJags      <-  list('lnRate', 'tjagsModelMatrix', 'K', 'pi')
+  if(run) {
+    parToSave  <-  c(parToSave, c('varR', paste0('r[', sort(unique(as.numeric(as.factor(data$Run)))), ']')))
+    runJ       <-  as.numeric(as.factor(data$Run))
+    tJags      <-  append(tJags, list('runJ'))
+  }
+  jagsModel(run, outputFileName)
+  tfit        <-  jags.parallel(data=tJags, parameters.to.save=parToSave, model.file=outputFileName, n.chains=5, n.iter=1e6, n.thin=250, envir=environment())
+  system(paste0('rm ', outputFileName))
+  recompile(tfit)
+  tfit        <-  autojags(tfit, n.iter=5e5, n.thin=250, n.update=100)
+  tfit
+}
+
+modelComparisonPVals  <-  function(data, modelList, verbose=TRUE) {
+  modDiff  <-  compare(modelList[[data$complexModel]]$loo, modelList[[data$nestedModel]]$loo)
+  if(verbose)
+    print(modDiff)
+  data.frame(zPVal = 2*pnorm(-abs((modDiff[['elpd_diff']] - 0) / modDiff[['se']])),
+         tPVal = 2*pt(abs((modDiff[['elpd_diff']] - 0) / modDiff[['se']]), df=402-1, lower.tail=FALSE))
+}
+
+cleanPvals  <-  function(x) {
+  if(x <= 0.05 & x > 0.01)
+    return('<= 0.05')
+  else if(x <= 0.01 & x > 0.001)
+    return('<= 0.01')
+  else if(x <= 0.001 & x > 0.0001)
+    return('<= 0.001')
+  else if(x <= 0.0001)
+    return('<= 0.0001')
+  else
+    paste0('= ', round(x, 2))
+}
+
+###############
 # PAPER NUMBERS
 ###############
-cleanJagsSummary  <-  function(jagsSummary=tfit$BUGSoutput$summary, modelMatrix=modelLmer1) {
-  jagsMat            <-  jagsSummary[paste0('beta[', seq_along(fixef(modelMatrix)), ']'), ]
-  rownames(jagsMat)  <-  names(fixef(modelMatrix))
+cleanJagsSummary  <-  function(jagsSummary=fixedSelec[[1]]$jagsFit$BUGSoutput$summary, modelMatrix=lmModel1) {
+  jagsMat            <-  jagsSummary[paste0('beta[', seq_along(coef(modelMatrix)), ']'), ]
+  rownames(jagsMat)  <-  names(coef(modelMatrix))
   jagsMat
 }
 
-cleanJagsMatrix  <-  function(jagsMatrix=tfit$BUGSoutput$sims.matrix, modelMatrix=modelLmer1) {
-  jagsMat            <-  jagsMatrix[, paste0('beta[', seq_along(fixef(modelMatrix)), ']')]
-  colnames(jagsMat)  <-  names(fixef(modelMatrix))
+cleanJagsMatrix  <-  function(jagsMatrix=fixedSelec[[1]]$jagsFit$BUGSoutput$sims.matrix, modelMatrix=lmModel1) {
+  jagsMat            <-  jagsMatrix[, paste0('beta[', seq_along(coef(modelMatrix)), ']')]
+  colnames(jagsMat)  <-  names(coef(modelMatrix))
   jagsMat
 }
 
@@ -126,3 +201,8 @@ getq10andEr  <-  function(averageEstimates) {
   data.frame(species=averageEstimates$species, q10=q10, er=er, stringsAsFactors=FALSE)
 }
 
+getMetabolicDiff  <-  function(averageEstimates, lnMass) {
+  data.frame(species       =  averageEstimates$species, 
+            metabolicDiff  =  exp(averageEstimates$lnB25 + averageEstimates$s25 * lnMass) / exp(averageEstimates$lnB10 + averageEstimates$s10 * lnMass),
+            stringsAsFactors=FALSE)
+}
