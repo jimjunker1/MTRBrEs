@@ -131,7 +131,7 @@ plotTriad  <-  function(species=species, spNames=spNames, tmat, x1=TRUE, y1=TRUE
   }
 
   if(y2) {
-    y2l  <-  substitute('ln Rates, '*italic('B'['i'])*' (units?)')
+    y2l  <-  substitute('ln Rates, '*italic('B'['i'])*' ('*mu*'l O'[2]*' h'^{-1}*')')
   } else {
     y2l  <-  ''
   }
@@ -143,7 +143,7 @@ plotTriad  <-  function(species=species, spNames=spNames, tmat, x1=TRUE, y1=TRUE
   }
 
   if(y3) {
-    y3l  <-  substitute('ln '*italic('B'['o'])*' (units?)')
+    y3l  <-  substitute('ln '*italic('B'['o']))
   } else {
     y3l  <-  ''
   }
@@ -155,7 +155,7 @@ plotTriad  <-  function(species=species, spNames=spNames, tmat, x1=TRUE, y1=TRUE
   }
 
   if(y4) {
-    y4l  <-  substitute('ln '*italic('B'['o'])*' (units?)')
+    y4l  <-  substitute('ln '*italic('B'['o']))
   } else {
     y4l  <-  ''
   }
