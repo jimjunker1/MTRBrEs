@@ -1,4 +1,5 @@
 library(plyr)
+library(loo)
 rm(list=ls())
 source('paths.R')
 source('dataManipulation.R')
@@ -15,9 +16,6 @@ table1  <-  ddply(metRates, .(Species, Temp), function(x) {
 write.csv(table1, 'output/data/table1.csv', row.names=FALSE)
 
 # table 2
-# modelComparisonPVals  <-  function(data, modelList, verbose=TRUE) {
-#FixEffComps  <-  ddply(nested, .(complexModel, nestedModel), modelComparisonPVals, modelList=fixedSelec)
-
 table2  <-  ldply(2:9, function(x) {
 	modDiff  <-  compare(fixedSelec[[1]]$loo, fixedSelec[[x]]$loo)
 	data.frame(elpdDiff  =  rounded(modDiff[['elpd_diff']], 2),
