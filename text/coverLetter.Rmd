@@ -1,18 +1,11 @@
-Diego R. Barneche  
-School of Biological Sciences  
-Monash University  
-Melbourne 3800 VIC  
-Australia  
-barnechedr@gmail.com  
-  
-March XX, 2016  
+March 18 2016  
   
 To the Editors of Functional Ecology,  
 
 Please find attached our manuscript entitled "Temperature effects on mass-scaling exponents in colonial animals: a manipulative test" for consideration as a Standard Paper in Functional Ecology.  
   
-In this article, we use a manipulative approach to test for an association between metabolic mass scaling and temperature dependence in four species of colonial marine invertebrates belonging to two phyla. By adopting a size-manipulation approach, we achieved a more definitive test of mass-scaling of metabolic rates for cancelling the confounding effects of size and age, and by mimicking predation, which constitutes a fundamental ecological process in the wild. Our results indicate that mass scaling and temperature dependence of metabolic rates interact in different ways across the studies species, and these interactions are not consistent across growth form nor phyla.  
-  
+In this article, we use a manipulative approach to test for an association between metabolic mass scaling and temperature dependence in four species of colonial marine invertebrates belonging to two phyla. By adopting a size-manipulation approach, we achieved a more definitive test of mass-scaling of metabolic rates for cancelling the confounding effects of size and age, and by fragmenting colonies, a natural source of size variation in modular organisms in the wild. Our results indicate that mass scaling and temperature dependence of metabolic rates interact in different ways across the studies species, and these interactions are not consistent across growth form nor phyla.  
+
 Our study should be of general interest to readers of Functional Ecology because our findings suggest that different species might have different competitive advantages at different environmental temperatures. We suggest that the often observed competitive superiority of some colonial organisms over unitary ones may arise due to the differential scaling between metabolic and feeding rates -- energy availability for growth and or reproduction increases more strongly with size in colonial organisms compared to unitary ones.  
   
 Below, we list some potential reviewers, contact details, and a summary of their areas of expertise. Please do not hesitate to contact me if you have any questions.  
@@ -21,9 +14,15 @@ Thank you for your consideration.
 Sincerely,  
   
 Diego R. Barneche  
+(on behalf of all coauthors)  
+School of Biological Sciences  
+Monash University  
+Melbourne 3800 VIC  
+Australia  
+barnechedr@gmail.com  
   
 Suggested Referees:  
-
+  
 Dr. Douglas S. Glazier (Department of Biology, Juniata College, Huntingdon, Pennsylvania 16652 USA; E-mail: glazier@juniata.edu).  
 Expertise: metabolic scaling  
   
