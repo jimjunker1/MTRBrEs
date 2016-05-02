@@ -6,3 +6,4 @@ output/
 .Rapp.history
 library.bib
 *tmp*
+*.rda
