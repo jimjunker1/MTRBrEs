@@ -67,7 +67,6 @@ jagsModel  <-  function(run=TRUE, outputFileName) {
   jmod[(length(jmod) + 1)]  <-  '\tfor(i in 1:length(lnRate)) {'
   jmod[(length(jmod) + 1)]  <-  '\t\tlnRate[i]  ~  dnorm(muB[i], tauB)'
   jmod[(length(jmod) + 1)]  <-  '\t\tmuB[i]  <-  inprod(beta[], tjagsModelMatrix[i,])'
-  jmod[(length(jmod) + 1)]  <-  '\t\tlogLik[i]  <- - log(tauB) + log(2*pi)  + pow(lnRate[i]-muB[i],2) * tauB'
   jmod[(length(jmod) + 1)]  <-  '\t}'
   
   if(run) {
@@ -89,33 +88,24 @@ fitJags  <-  function(lmModelMatrix, run=TRUE, data=metRates, outputFileName='mo
   tjagsModelMatrix  <-  model.matrix(lmModelMatrix)
   K                 <-  ncol(tjagsModelMatrix)
   set.seed(1)
-  parToSave  <-  c('varB', paste0('beta[', seq_len(K), ']'), paste0('logLik[', seq_len(nrow(tjagsModelMatrix)), ']'))
+  parToSave  <-  c('varB', paste0('beta[', seq_len(K), ']'))
   lnRate     <-  data$lnRate
-  tJags      <-  list('lnRate', 'tjagsModelMatrix', 'K', 'pi')
+  tJags      <-  list('lnRate', 'tjagsModelMatrix', 'K')
   if(run) {
     parToSave  <-  c(parToSave, c('varR', paste0('r[', sort(unique(as.numeric(as.factor(data$Run)))), ']')))
     runJ       <-  as.numeric(as.factor(data$Run))
     tJags      <-  append(tJags, list('runJ'))
   }
   jagsModel(run, outputFileName)
-  tfit        <-  jags.parallel(data=tJags, parameters.to.save=parToSave, model.file=outputFileName, n.chains=5, n.iter=1e6, n.thin=250, envir=environment())
+  tfit        <-  jags(data=tJags, parameters.to.save=parToSave, model.file=outputFileName, n.chains=3, n.iter=5e5, n.thin=250)
   system(paste0('rm ', outputFileName))
-  recompile(tfit)
   tfit        <-  autojags(tfit, n.iter=5e5, n.thin=250, n.update=100)
   tfit
 }
 
-modelComparisonPVals  <-  function(data, modelList, verbose=TRUE) {
-  modDiff  <-  compare(modelList[[data$complexModel]]$loo, modelList[[data$nestedModel]]$loo)
-  if(verbose)
-    print(modDiff)
-  data.frame(zPVal = 2*pnorm(-abs((modDiff[['elpd_diff']] - 0) / modDiff[['se']])),
-         tPVal = 2*pt(abs((modDiff[['elpd_diff']] - 0) / modDiff[['se']]), df=402-1, lower.tail=FALSE))
-}
-
 cleanPvals  <-  function(x) {
-  if(x <= 0.05 & x > 0.01)
-    return('<= 0.05')
+  if(x < 0.05 & x > 0.01)
+    return('< 0.05')
   else if(x <= 0.01 & x > 0.001)
     return('<= 0.01')
   else if(x <= 0.001 & x > 0.0001)
@@ -129,15 +119,15 @@ cleanPvals  <-  function(x) {
 ###############
 # PAPER NUMBERS
 ###############
-cleanJagsSummary  <-  function(jagsSummary=fixedSelec[[1]]$jagsFit$BUGSoutput$summary, modelMatrix=lmModel1) {
-  jagsMat            <-  jagsSummary[paste0('beta[', seq_along(coef(modelMatrix)), ']'), ]
-  rownames(jagsMat)  <-  names(coef(modelMatrix))
+cleanJagsSummary  <-  function(jagsSummary=model$BUGSoutput$summary, modelMatrix=lmerModel1) {
+  jagsMat            <-  jagsSummary[paste0('beta[', seq_len(ncol(coef(modelMatrix)$Run)), ']'), ]
+  rownames(jagsMat)  <-  names(coef(modelMatrix)$Run)
   jagsMat
 }
 
-cleanJagsMatrix  <-  function(jagsMatrix=fixedSelec[[1]]$jagsFit$BUGSoutput$sims.matrix, modelMatrix=lmModel1) {
-  jagsMat            <-  jagsMatrix[, paste0('beta[', seq_along(coef(modelMatrix)), ']')]
-  colnames(jagsMat)  <-  names(coef(modelMatrix))
+cleanJagsMatrix  <-  function(jagsMatrix=model$BUGSoutput$sims.matrix, modelMatrix=lmerModel1) {
+  jagsMat            <-  jagsMatrix[, paste0('beta[', seq_len(ncol(coef(modelMatrix)$Run)), ']')]
+  colnames(jagsMat)  <-  names(coef(modelMatrix)$Run)
   jagsMat
 }
 

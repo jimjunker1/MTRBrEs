@@ -1,44 +1,11 @@
 ######################
 # AUXILLIARY FUNCTIONS
 ######################
-make.transparent <- function(col, opacity=0.5) {
-  if (length(opacity) > 1 && any(is.na(opacity))) {
-    n <- max(length(col), length(opacity))
-    opacity <- rep(opacity, length.out=n)
-    col <- rep(col, length.out=n)
-    ok <- !is.na(opacity)
-    ret <- rep(NA, length(col))
-    ret[ok] <- Recall(col[ok], opacity[ok])
-    ret
-  } else {
-    tmp <- col2rgb(col)/255
-    rgb(tmp[1,], tmp[2,], tmp[3,], alpha=opacity)
-  }
+toPdf <- function(expr, filename, ...) {
+  toDev(expr, pdf, filename, ...)
 }
 
-label <- function(px, py, lab, adj=c(0, 1), text=TRUE, log=FALSE, ...) {
-  usr  <-  par('usr')
-  x.p  <-  usr[1] + px*(usr[2] - usr[1])
-  y.p  <-  usr[3] + py*(usr[4] - usr[3])
-  if(log=='x'){x.p<-10^(x.p)}
-  if(log=='y'){y.p<-10^(y.p)}
-  if(log=='xy'){x.p<-10^(x.p);y.p<-10^(y.p)}
-  if(text){
-    text(x.p, y.p, lab, adj=adj, ...)
-  } else {
-    points(x.p, y.p, ...)
-  }
-}
-
-to.pdf <- function(expr, filename, ...) {
-  to.dev(expr, pdf, filename, ...)
-}
-
-fig.path  <-  function(name) {
-  file.path('output/figures', name)
-}
-
-to.dev <- function(expr, dev, filename, ..., verbose=TRUE) {
+toDev <- function(expr, dev, filename, ..., verbose=TRUE) {
   if ( verbose )
     cat(sprintf('Creating %s\n', filename))
   dev(filename, family='CM Roman', ...)
@@ -46,26 +13,11 @@ to.dev <- function(expr, dev, filename, ..., verbose=TRUE) {
   eval.parent(substitute(expr))
 }
 
-to.pdf <- function(expr, filename, ...) {
-  to.dev(expr, pdf, filename, ...)
-}
-
 rounded  <-  function(value, precision=1, change=FALSE) {
   if(change) {
     value  <-  value * -1
   }
   sprintf(paste0('%.', precision, 'f'), round(value, precision))
-}
-
-whiteGrid  <-  function() {
-  label(rep(0.2, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5)
-  label(rep(0.4, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5)
-  label(rep(0.6, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5)
-  label(rep(0.8, 2), c(0,1), text=FALSE, type='l', col='white', lwd=0.5)
-  label(c(0,1), rep(0.2, 2), text=FALSE, type='l', col='white', lwd=0.5)
-  label(c(0,1), rep(0.4, 2), text=FALSE, type='l', col='white', lwd=0.5)
-  label(c(0,1), rep(0.6, 2), text=FALSE, type='l', col='white', lwd=0.5)
-  label(c(0,1), rep(0.8, 2), text=FALSE, type='l', col='white', lwd=0.5)
 }
 
 ###############
@@ -161,22 +113,22 @@ plotTriad  <-  function(species=species, spNames=spNames, tmat, x1=TRUE, y1=TRUE
   }
 
   plot(NA, xlab='', ylab='', xlim=c(-1, 2), ylim=c(0,0.01), xpd=NA, type='l', axes=FALSE)
-  label(0.5, 1.4, x1l, adj=c(0.5, 1), xpd=NA)
-  label(-0.4, 0.5, y1l, adj=c(0.5, 0.5), xpd=NA, srt=90)
+  proportionalLabel(0.5, 1.4, x1l, adj=c(0.5, 1), xpd=NA)
+  proportionalLabel(-0.4, 0.5, y1l, adj=c(0.5, 0.5), xpd=NA, srt=90)
   usr  <-  par('usr')
   rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
   whiteGrid()
   if(x1) axis(3, at=seq(-1, 2, 1))
   axis(2, at=seq(0, 0.008, 0.004), labels=seq(0, 8, 4), las=1)
   box()
-  polygon(c(xDens10$x, min(xDens10$x)), c(xDens10$y, min(xDens10$y)), border='dodgerblue2', col=make.transparent('dodgerblue2', 0.3))
-  polygon(c(xDens25$x, min(xDens25$x)), c(xDens25$y, min(xDens25$y)), border='tomato', col=make.transparent('tomato', 0.3))
+  polygon(c(xDens10$x, min(xDens10$x)), c(xDens10$y, min(xDens10$y)), border='dodgerblue2', col=transparentColor('dodgerblue2', 0.3))
+  polygon(c(xDens25$x, min(xDens25$x)), c(xDens25$y, min(xDens25$y)), border='tomato', col=transparentColor('tomato', 0.3))
   quants  <-  quantile(s10, probs=c(0.025, 0.975), type=2)
-  label(figureProp(quants), rep(0.95, 2), text=FALSE, type='l', col='dodgerblue2', lwd=1.2)
-  label(0.97, 0.95, rounded(mean(s10), 2), adj=c(1, 0.5), col='dodgerblue2', cex=0.8)
+  proportionalLabel(figureProp(quants), rep(0.95, 2), text=FALSE, type='l', col='dodgerblue2', lwd=1.2)
+  proportionalLabel(0.97, 0.95, rounded(mean(s10), 2), adj=c(1, 0.5), col='dodgerblue2', cex=0.8)
   quants  <-  quantile(s25, probs=c(0.025, 0.975), type=2)
-  label(figureProp(quants), rep(0.86, 2), text=FALSE, type='l', col='tomato', lwd=1.2)
-  label(0.97, 0.86, rounded(mean(s25), 2), adj=c(1, 0.5), col='tomato', cex=0.8)
+  proportionalLabel(figureProp(quants), rep(0.86, 2), text=FALSE, type='l', col='tomato', lwd=1.2)
+  proportionalLabel(0.97, 0.86, rounded(mean(s25), 2), adj=c(1, 0.5), col='tomato', cex=0.8)
 
   dat         <-  metRates[metRates$Species == species, ]
   dat$colors  <-  c('dodgerblue2', 'tomato')[match(dat$TempK, c(283.15, 298.15))]
@@ -184,9 +136,9 @@ plotTriad  <-  function(species=species, spNames=spNames, tmat, x1=TRUE, y1=TRUE
   usr  <-  par('usr')
   rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
   whiteGrid()  
-  points(dat$lnRate ~ dat$lnMass, pch=16, col=make.transparent(dat$colors, 0.6))
-  label(0.5, 1.4, x2l, adj=c(0.5, 1), xpd=NA)
-  label(1.4, 0.5, y2l, adj=c(0.5, 1), xpd=NA, srt=270)
+  points(dat$lnRate ~ dat$lnMass, pch=16, col=transparentColor(dat$colors, 0.6))
+  proportionalLabel(0.5, 1.4, x2l, adj=c(0.5, 1), xpd=NA)
+  proportionalLabel(1.4, 0.5, y2l, adj=c(0.5, 1), xpd=NA, srt=270)
   if(x2) axis(3, at=seq(0, 6, 2))
   axis(4, at=seq(-5, 5, 5), las=1)
   box()
@@ -196,7 +148,7 @@ plotTriad  <-  function(species=species, spNames=spNames, tmat, x1=TRUE, y1=TRUE
   xpts  <-  range(dat$lnMass[dat$TempK == 298.15])
   lines(xpts, mean(i25) + mean(s25)*xpts, lwd=2.3)
   lines(xpts, mean(i25) + mean(s25)*xpts, col='tomato', lwd=2)
-  label(0.03, 0.9, spNames, adj=c(0, 0.5), xpd=NA, cex=1)
+  proportionalLabel(0.03, 0.9, spNames, adj=c(0, 0.5), xpd=NA, cex=1)
 
   den3d10  <-  kde2d(s10, i10, n=500)
   den3d25  <-  kde2d(s25, i25, n=500)
@@ -204,12 +156,12 @@ plotTriad  <-  function(species=species, spNames=spNames, tmat, x1=TRUE, y1=TRUE
   usr  <-  par('usr')
   rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
   whiteGrid()
-  label(0.5, -0.4, x3l, adj=c(0.5, 0.5), xpd=NA)
-  label(-0.4, 0.5, y3l, adj=c(0.5, 0.5), xpd=NA, srt=90)
-  points(s10, i10, pch=16, col=make.transparent('dodgerblue2', 0.1))
-  points(s25, i25, pch=16, col=make.transparent('tomato', 0.1))
-  image(den3d10, col=make.transparent(col10, c(0, rep(0.1, 31))), add=TRUE)
-  image(den3d25, col=make.transparent(col25, c(0, rep(0.1, 31))), add=TRUE)
+  proportionalLabel(0.5, -0.4, x3l, adj=c(0.5, 0.5), xpd=NA)
+  proportionalLabel(-0.4, 0.5, y3l, adj=c(0.5, 0.5), xpd=NA, srt=90)
+  points(s10, i10, pch=16, col=transparentColor('dodgerblue2', 0.1))
+  points(s25, i25, pch=16, col=transparentColor('tomato', 0.1))
+  image(den3d10, col=transparentColor(col10, c(0, rep(0.1, 31))), add=TRUE)
+  image(den3d25, col=transparentColor(col25, c(0, rep(0.1, 31))), add=TRUE)
   if(x3) axis(1, at=seq(-1, 2, 1))
   if(y3) axis(2, at=seq(-10, 5, 5), las=1)
   box()
@@ -217,28 +169,28 @@ plotTriad  <-  function(species=species, spNames=spNames, tmat, x1=TRUE, y1=TRUE
   xDens10    <-  getProb(density(i10))
   xDens25    <-  getProb(density(i25))
   plot(NA, xlab='', ylab='', xlim=c(0,0.03), ylim=c(-10, 7), xpd=NA, type='l', axes=FALSE)
-  label(0.5, -0.4, x4l, adj=c(0.5, 0.5), xpd=NA)
-  label(1.4, 0.5, y4l, adj=c(0.5, 1), xpd=NA, srt=270)
+  proportionalLabel(0.5, -0.4, x4l, adj=c(0.5, 0.5), xpd=NA)
+  proportionalLabel(1.4, 0.5, y4l, adj=c(0.5, 1), xpd=NA, srt=270)
   usr  <-  par('usr')
   rect(usr[1], usr[3], usr[2], usr[4], col='grey90', border=NA)
   whiteGrid()
   if(x4) axis(1, seq(0, 0.02, 0.01), labels=seq(0, 20, 10))
   if(y4) axis(4, at=seq(-10, 5, 5), las=1)
   box()
-  polygon(c(xDens10$y, min(xDens10$y)), c(xDens10$x, min(xDens10$x)), border='dodgerblue2', col=make.transparent('dodgerblue2', 0.3))
-  polygon(c(xDens25$y, min(xDens25$y)), c(xDens25$x, min(xDens25$x)), border='tomato', col=make.transparent('tomato', 0.3))
+  polygon(c(xDens10$y, min(xDens10$y)), c(xDens10$x, min(xDens10$x)), border='dodgerblue2', col=transparentColor('dodgerblue2', 0.3))
+  polygon(c(xDens25$y, min(xDens25$y)), c(xDens25$x, min(xDens25$x)), border='tomato', col=transparentColor('tomato', 0.3))
   quants  <-  quantile(i10, probs=c(0.025, 0.975), type=2)
-  label(rep(0.95, 2), figureProp(quants, 'y'), text=FALSE, type='l', col='dodgerblue2', lwd=1.2)
-  label(0.95, 0.15, rounded(mean(i10), 2), adj=c(1, 0.5), col='dodgerblue2', cex=0.8)
+  proportionalLabel(rep(0.95, 2), figureProp(quants, 'y'), text=FALSE, type='l', col='dodgerblue2', lwd=1.2)
+  proportionalLabel(0.95, 0.15, rounded(mean(i10), 2), adj=c(1, 0.5), col='dodgerblue2', cex=0.8)
   quants  <-  quantile(i25, probs=c(0.025, 0.975), type=2)
-  label(rep(0.86, 2), figureProp(quants, 'y'), text=FALSE, type='l', col='tomato', lwd=1.2)
-  label(0.86, 0.06, rounded(mean(i25), 2), adj=c(1, 0.5), col='tomato', cex=0.8)
+  proportionalLabel(rep(0.86, 2), figureProp(quants, 'y'), text=FALSE, type='l', col='tomato', lwd=1.2)
+  proportionalLabel(0.86, 0.06, rounded(mean(i25), 2), adj=c(1, 0.5), col='tomato', cex=0.8)
 }
 
 fig1  <-  function() {
-  tmat  <-  fixedSelec[[1]]$jagsFit$BUGSoutput$sims.matrix
-  tmat  <-  tmat[,paste0('beta[', seq_along(coef(lmModel1)), ']')]
-  colnames(tmat)  <-  names(coef(lmModel1))
+  tmat  <-  model$BUGSoutput$sims.matrix
+  tmat  <-  tmat[,paste0('beta[', seq_len(ncol(coef(lmerModel1)$Run)), ']')]
+  colnames(tmat)  <-  names(coef(lmerModel1)$Run)
   species  <-  unique(metRates$Species)
   # species real names
   spNames  <-  list(substitute(italic('Hippopodina')*' sp.'),
