@@ -9,7 +9,7 @@ rm(list=ls())
 ###########
 knit('text/MS.Rmd', output=file.path(getwd(), 'text/MS.md'), quiet=TRUE, encoding = 'utf-8')
 # to word
-system('pandoc -o text/MS.docx text/MS.md -s -S --bibliography library.bib --csl functionalEcology.csl')
+system('pandoc -o text/MS.docx text/MS.md -s -S --bibliography library.bib --csl ecology.csl')
 
 ##############
 # COVER LETTER 
