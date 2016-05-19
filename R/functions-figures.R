@@ -193,7 +193,7 @@ fig1  <-  function() {
   colnames(tmat)  <-  names(coef(lmerModel1)$Run)
   species  <-  unique(metRates$Species)
   # species real names
-  spNames  <-  list(substitute(italic('Hippopodina')*' sp.'),
+  spNames  <-  list(substitute(italic('Hippopodina iririkiensis')),
                     'Microcionidae',
                     substitute(italic('Bugula neritina')),
                     substitute(italic('Bugula stolonifera')))
