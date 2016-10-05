@@ -8,9 +8,10 @@ This repository contains all data, analyses, figures and tables presented at the
 * first I advise that you open your R GUI (R, RStudio, or starting on terminal) from the `MTRBrEs.RData` file...  
 * ...this is an empty file that sets the absolute path to your project so everything will work independently on any machine;   
 * pay attention to the required packages at the beginning of each `.R` file in the project root directory;  
-* in the project root directory, you can reproduce all the analyses and outputs by running `analyses.R`, `numbers.R` and then `figures.R`;  
+* in the project root directory, you can reproduce all the analyses and outputs by running `analyses.R`, `numbers.R`, `tables.R` and then `figures.R`;  
 * the file called `figures.R` reproduces all the figures exactly as they are shown in the paper **once** you have already reproduced all the outputs by running `analyses.R` above;  
 * the file called `numbers.R` contains specific statistics exactly as presented in the paper (need to run `analyses.R` first too);  
+* the file called `tables.R` reproduces the numbers presented in Tables 1 and 2, though not in a pretty format (need to run `analyses.R` first too);  
 * the figures will be automatically placed in a directory called output (it is going to be automatically created for you);  
 * **Importantly**, the alternative figures will only work if you have the packages `extrafont` and `fontcm` installed. Follow the instructions [here](https://cran.r-project.org/web/packages/fontcm/README.html) to install the font `CM Roman`;  
 * notice that the Bayesian analysis in `analyses.R` may take a while to run on a regular computer;  
