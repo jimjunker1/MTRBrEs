@@ -4,12 +4,10 @@
 # Run = the day in which the experimental run was conducted
 # Plate = the plate reader
 # Position = grid reference on the plate reader (e.g. 24 well)
-# Location = CT Room approach (e.g. esky)
-# Form = Enrusting vs. Arborescent
 # Species - species code 
 # Temp - temperature in Celsius
-# logM - log (base 10) of mass (units?)
-# logVo2 - log (base 10) of oxygen consumption (units?)
+# logM - log (base 10) of mass (mg)
+# logVo2 - log (base 10) of oxygen consumption (µL O2 h^-1^)
 
 ###############
 # SPECIES NAMES
