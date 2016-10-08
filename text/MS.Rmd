@@ -1,8 +1,4 @@
 ```{r, results="hide", warnings=FALSE, echo=FALSE, message=FALSE}
-load('../output/RDatafiles/analyses.RData')
-load('../output/RDatafiles/numbers.RData')
-source('../R/functions-analyses.R')
-source('../R/functions-figures.R')
 cleanbib()
 myRefs   <-  listBibs()
 exporBibs(myRefs, erase=TRUE)
@@ -61,6 +57,14 @@ where mass, $\textrm{ln}M_i$ (mg), is a continuous variable, while temperature (
 All models were initially fitted using maximum likelihood `r myCite('zuur2009book')` with the R package *lme4* version 1.1-8 `r myCite('lme4')`. Each nested model was compared against the full model using likelihood ratio tests, and models were considered significantly different if *p* < 0.05. We then fitted the best model in a Bayesian framework by calling *JAGS* version 3.4.0 from the R package *R2jags* version 0.05-03 `r myCite('r2jags')` in order to derive posterior distributions and associated 95\% credible intervals (CIs) for the fitted parameters. Random effects were assumed to be normally distributed, with means of 0. Fitted parameters were assigned priors that were vague (i.e. locally uniform over the region supported by the likelihood) `r myCite('kruschke2014book')`. The posterior distributions of model parameters were estimated using Markov chain Monte Carlo (MCMC) methods by constructing three chains of 500,000 steps each, including 250,000-step burn-in periods. Chains were then updated with 500,000 steps each until convergence was reached using 250-thinning step interval, so a total of 6,000 steps were retained to estimate posterior distributions (i.e. 3 $\times$ 500,000/250 = 6,000). All data and code necessary to reproduce this paper, its analyses, tables and figures can be obtained on GitHub https://github.com/dbarneche/MTRBrEs.  
   
 **Results**  
+  
+```{r}
+ci95Estimates     <-  numbersList$ci95Estimates
+metabolicDiff     <-  numbersList$metabolicDiff
+averageEstimates  <-  numbersList$averageEstimates
+q10andErs         <-  numbersList$q10andErs
+tempDeltas        <-  numbersList$tempDeltas
+```
   
 The model selection indicated that the three-way interaction model (equation 2) performed significantly better than all nested two- and one-way interaction models (Table 2), thus implying that different species present different interactions between mass-scaling and temperature dependence. Particularly, the best model yields no interaction between mass scaling and temperature dependence for *Bugula stolonifera* and the Microcionidae sponge (large overlap between 95\% credible intervals for the mass-scaling slopes, $\alpha$) (Fig. 2). Still, while the mass-scaling slopes are statistically the same between temperatures for these species, there is evidence for higher metabolic normalizations (i.e. intercepts), $B_o$, at higher temperatures (though marginally significant for Microcionidae, i.e. slight overlap between 95\% credible intervals; bottom-right quadrants in Fig. 2). For example, metabolic rates increase `r rounded(exp(averageEstimates$lnB25[averageEstimates$species == 'Stolonifera'])/exp(averageEstimates$lnB10[averageEstimates$species == 'Stolonifera']))`-fold between 10 ˚C and 25 ˚C for *B. stolonifera*, yielding a $Q_{10}$ of `r rounded(q10andErs$q10[q10andErs$species == 'Stolonifera'])`, which is equivalent to an activation energy of `r rounded(q10andErs$er[q10andErs$species == 'Stolonifera'], 2)` eV `r myCite(c('gillooly2001','yvondurocher2012a'))`. The best model indicates that the difference in metabolic rates between 25 ˚C and 10 ˚C for *Hippopodina iririkiensis* decreases, on average, `r rounded(tempDeltas[1,'tempDelta'])`-fold moving from `r round(exp(2))` to `r round(exp(5))` mg. For *Bugula neritina*, however, rates increase `r rounded(1/tempDeltas[3,'tempDelta'])`-fold along the same body-mass gradient.  
 

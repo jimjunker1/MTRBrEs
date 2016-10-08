@@ -1,9 +1,3 @@
-library(knitr)
-library(bibtex)
-library(knitcitations)
-library(plyr)
-
-rm(list=ls())
 ###########
 # MAIN TEXT 
 ###########

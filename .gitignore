@@ -7,3 +7,4 @@ output/
 library.bib
 *tmp*
 *.rda
+*.remake/

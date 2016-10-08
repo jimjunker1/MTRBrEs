@@ -1,0 +1,67 @@
+packages:
+  - lme4
+  - plyr
+  - R2jags
+  - knitr
+  - bibtex
+  - knitcitations
+  - LoLinR
+  - png
+  - MASS
+  - RColorBrewer
+  - extrafont
+  - fontcm
+
+## All R files that are used must be listed here:
+sources:
+  - paths.R
+  - R/functions-analyses.R
+  - R/functions-figures.R
+
+## Most of a remakefile will be targets.  They can be listed in any
+## order; whatever makes most sense.  Files can be split up and
+## included into the main file if you need to impose more structure.
+targets:
+  ## 'all' is a special target that will be used as the default
+  ## target by 'remake'.  It doesn't actually make anything but
+  ## 'depends' on other targets.
+  all:
+    depends: outputs/RDatafiles/analyses.RData
+
+  ## 'target_name' is a special variable here: it will pass 'data.csv'
+  ## through to the function 'download_data()' so that the data are
+  ## stored in the correct place.
+  metRates:
+    command: readAndCleanData('data/data.csv')
+
+  ## 'processed' will be stored as an R object because it looks like
+  ## an object name rather than a file name (file names have
+  ## extensions or slashes in them).  It will be saved across
+  ## sessions.  Because it uses 'data.csv', remake will work out that
+  ## this target depends on 'data.csv'.
+  outputs/RDatafiles/analyses.RData:
+    command: produceAnalysesOutputs(metRates)
+    
+  ## Specifying 'plot: true' here tells remake that you are creating a
+  ## plot.  It will sort out opening/closing the pdf device for you.
+  ## Because 'myplot' uses 'processed', remake will work out that this
+  ## target requires the processed target to be made first.
+  # tables:
+  #   depends: output/RDatafiles/analyses.RData
+  #   command: makeTables(dataTable1=metRates, dataTable2=outputs)
+  
+  # numbersList:
+  #   depends:
+  #     - output/RDatafiles/analyses.RData
+  #   command: extractNumbersList()
+    
+
+  # figures:
+  #   command: source('figures.R')
+  #   depends: output/RDatafiles/analyses.RData
+
+  # text/MS.docx:
+  #   command: source('paper.R')
+  #   depends: 
+  #     - output/RDatafiles/analyses.RData
+  #     - numbersList
