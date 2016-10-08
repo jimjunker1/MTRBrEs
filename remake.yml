@@ -39,7 +39,7 @@ targets:
   ## extensions or slashes in them).  It will be saved across
   ## sessions.  Because it uses 'data.csv', remake will work out that
   ## this target depends on 'data.csv'.
-  outputs/RDatafiles/analyses.RData:
+  output/RDatafiles/analyses.RData:
     command: produceAnalysesOutputs(metRates)
     
   ## Specifying 'plot: true' here tells remake that you are creating a
