@@ -79,3 +79,6 @@ d13g0 DOT b4rn3ch3 AT m0n4sh DOT 3du (replace the 0 for o, 1 for i, 3 for e, 4 f
 
 ### How to download this project for people not familiar with GitHub:  
 * on the project main page on GitHub, click on the green button `clone or download` and then click on `Download ZIP`  
+
+### Acknowledgements:  
+Many thanks to [Rich FitzJohn](https://github.com/richfitz), [Remko Duursma](https://github.com/RemkoDuursma), and [Daniel Falster](https://github.com/dfalster) for providing excellent examples on how to implement this work flow using `remake`.
