@@ -20,30 +20,32 @@ The `remake` package also depends on `storr`, install it like this:
 devtools::install_github("richfitz/storr", dependencies=TRUE)
 ```
 
+You also need to install the software `JAGS`, as per these instructions [here](https://sourceforge.net/projects/mcmc-jags/?source=typ_redirect).
+
 Next you need to open an R session with working directory set to the root of the project.
 
-We use a number of packages, these can be easily installed by remake:
+We use a number of packages, missing packages can be easily installed by remake:
 
 ```r
 remake::install_missing_packages()
 ```
 
-The above command may not install the [LoLinR](https://github.com/colin-olito/LoLinR) package correctly, for that do:
+And then install the package `fontcm`, via `extrafont`. This installs the font `CM Roman` we use in our figures (for more information on see [these instructions](https://cran.r-project.org/web/packages/fontcm/README.html):
+
 ```r
-devtools::install_github("richfitz/datastorr")
-devtools::install_github("colin-olito/LoLinR")
+extrafont::font_install('fontcm')
+
 ```
 
 Then, to generate all figures, analyses, and manuscript (.docx, using Rmarkdown), simply do:
 
 ```r
 remake::make()
-source('wordFiles.R')
 ```
 
-**Importantly**, the figures will only work if you have the packages `extrafont` and `fontcm` installed. Follow the instructions [here](https://cran.r-project.org/web/packages/fontcm/README.html) to install the font `CM Roman`. The figures will be automatically placed in a directory called `output/figures` (it is going to be automatically created for you).  
+All output will be automatically placed in a directory called `output` (it is going to be automatically created for you).
 
-Also notice that the Bayesian analysis in this paper may take a while to run on a regular computer.  
+Also notice that the Bayesian analysis in this paper will take 20-30min to run on a regular computer.
 
 If you find remake confusing and prefer to run plain R, you can use remake to build a script `build.R` that produces a given output, e.g.
 
@@ -81,4 +83,4 @@ d13g0 DOT b4rn3ch3 AT m0n4sh DOT 3du (replace the 0 for o, 1 for i, 3 for e, 4 f
 * on the project main page on GitHub, click on the green button `clone or download` and then click on `Download ZIP`  
 
 ### Acknowledgements:  
-Many thanks to [Rich FitzJohn](https://github.com/richfitz), [Remko Duursma](https://github.com/RemkoDuursma), and [Daniel Falster](https://github.com/dfalster) for providing excellent examples on how to implement this work flow using `remake`.
+Many thanks to [Rich FitzJohn](https://github.com/richfitz), [Remko Duursma](https://github.com/RemkoDuursma), and [Daniel Falster](http://danielfalster.com) for providing excellent examples on how to implement this work flow using `remake`.

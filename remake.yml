@@ -3,6 +3,7 @@ packages:
   - plyr
   - R2jags
   - knitr
+  - rmarkdown
   - LoLinR
   - png
   - MASS
@@ -11,15 +12,15 @@ packages:
   - fontcm
 
 sources:
-  - outputRequirements.R
   - R/functions-analyses.R
   - R/functions-figures.R
 
 targets:
   all:
     depends:
-      - text/MS.md
-      - tables
+      - output/MS.docx
+      - output/data/table1.csv
+      - output/data/table2.csv
       - output/figures/fig1.pdf
       - output/figures/fig2.pdf
 
@@ -32,18 +33,40 @@ targets:
   output:
     command: produceAnalysesOutputs(metRates)
 
-  tables:
-    command: makeTables(dataTable1=metRates, pathToDataTable2='output/RDatafiles/analyses.RData')
-  
+  output/data/table1.csv:
+    command: makeTable1(metRates, target_name)
+
+  output/data/table2.csv:
+    command: makeTable2(output, target_name)
+
   numbersList:
-    command: extractNumbersList(metRates, 'output/RDatafiles/analyses.RData')
+    command: extractNumbersList(metRates, output)
     
   output/figures/fig1.pdf:
     command: makeFigure1()
 
   output/figures/fig2.pdf:
-    command: makeFigure2(metRates, 'output/RDatafiles/analyses.RData')
+    command: makeFigure2(metRates, output)
 
   text/MS.md:
     depends: numbersList
     knitr: TRUE
+
+  output/MS.docx:
+    command: pandoc_convert("text/MS.md", output=target_name, wd=I("."), options = I(c("--bibliography", "text/references.bib", "--csl", "text/ecology.csl")))
+    depends:
+      - text/references.bib
+
+  text/coverLetter.md:
+    knitr: TRUE
+
+  output/coverLetter.docx:
+    command: pandoc_convert("text/coverLetter.md", output=target_name, wd=I("."))
+
+  text/answers_to_reviewers.md:
+    knitr: TRUE
+
+  output/answers_to_reviewers.docx:
+    command: pandoc_convert("text/answers_to_reviewers.md", output=target_name, wd=I("."), options = I(c("--bibliography", "text/references.bib", "--csl", "text/ecology.csl")))
+    depends:
+      - text/references.bib
