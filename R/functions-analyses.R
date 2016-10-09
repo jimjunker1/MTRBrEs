@@ -21,23 +21,16 @@ readAndCleanData  <-  function(dataPath) {
 ########
 # TABLES
 ########
-makeTables  <-  function(dataTable1, pathToDataTable2) {
-    makeTable1(dataTable1)
-    load(pathToDataTable2)
-    makeTable2(output)
-}
-
-makeTable1  <-  function(data) {
+makeTable1  <-  function(data, dest) {
     tab1  <-  ddply(data, .(Species, Temp), function(x) {
         data.frame(minMass = rounded(min(exp(x$lnMass))),
                    maxMass = rounded(max(exp(x$lnMass))),
                    n         = nrow(x), stringsAsFactors=FALSE)
     })
-    write.csv(tab1, 'output/data/table1.csv', row.names=FALSE)
-    cat('Table 1 written to output/data/table1.csv \n')
+    write.csv(tab1, dest, row.names=FALSE)
 }
 
-makeTable2  <-  function(data) {
+makeTable2  <-  function(data, dest) {
     tab2  <-  data.frame()
     for(j in 2:9) {
         refModel  <-  data[[paste0('lmerModel', j)]]
@@ -45,8 +38,7 @@ makeTable2  <-  function(data) {
         tab2      <-  rbind(tab2, data.frame('d.f.'=aovTab[,'Chi.Df'], 'Chisq'=aovTab[,'Chisq'], 'P'=aovTab[,'Pr..Chisq.'], stringsAsFactors=FALSE))
     }
     tab2$P  <-  sapply(tab2$P, cleanPvals)
-    write.csv(tab2, 'output/data/table2.csv', row.names=FALSE)
-    cat('Table 2 written to output/data/table2.csv \n')
+    write.csv(tab2, dest, row.names=FALSE)
 }
 
 cleanPvals  <-  function(x) {
@@ -141,8 +133,8 @@ fitJags  <-  function(lmModelMatrix, data, run=TRUE, outputFileName='mod.bug') {
 ###############
 # PAPER NUMBERS
 ###############
-extractNumbersList  <-  function(metRates, outputPath) {
-    load(outputPath)
+extractNumbersList  <-  function(metRates, output) {
+
     # get average estimates and 95% CI for each parameter
     species           <-  unique(metRates$Species)
     averageEstimates  <-  ldply(species, getAverageEstimates, jagsSummary=output$model$BUGSoutput$summary, modelMatrix=output$lmerModel1)

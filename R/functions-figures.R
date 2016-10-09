@@ -1,6 +1,9 @@
 ######################
 # AUXILLIARY FUNCTIONS
 ######################
+
+extrafont::loadfonts(quiet=TRUE)
+
 toPdf <- function(expr, filename, ...) {
     toDev(expr, pdf, filename, ...)
 }
@@ -282,8 +285,7 @@ fig1  <-  function() {
     text(0.5, -0.14/pinRatio, 'G / 4', adj=c(0, 0.5), col='grey60', cex=1.3, font=3)
 }
 
-fig2  <-  function(metRates, outputPath) {
-    load(outputPath)
+fig2  <-  function(metRates, output) {
     tmat  <-  output$model$BUGSoutput$sims.matrix
     tmat  <-  tmat[,paste0('beta[', seq_len(ncol(coef(output$lmerModel1)$Run)), ']')]
     colnames(tmat)  <-  names(coef(output$lmerModel1)$Run)
