@@ -21,9 +21,10 @@ readAndCleanData  <-  function(dataPath) {
 ########
 # TABLES
 ########
-makeTables  <-  function(dataTable1, dataTable2) {
+makeTables  <-  function(dataTable1, pathToDataTable2) {
     makeTable1(dataTable1)
-    makeTable2(dataTable2)
+    load(pathToDataTable2)
+    makeTable2(output)
 }
 
 makeTable1  <-  function(data) {
@@ -33,17 +34,19 @@ makeTable1  <-  function(data) {
                    n         = nrow(x), stringsAsFactors=FALSE)
     })
     write.csv(tab1, 'output/data/table1.csv', row.names=FALSE)
+    cat('Table 1 written to output/data/table1.csv \n')
 }
 
 makeTable2  <-  function(data) {
     tab2  <-  data.frame()
     for(j in 2:9) {
         refModel  <-  data[[paste0('lmerModel', j)]]
-        aovTab    <-  data.frame(anova(data$lmerModel1, refModel))['lmerModel1',]
+        aovTab    <-  data.frame(anova(data$lmerModel1, refModel))['data$lmerModel1',]
         tab2      <-  rbind(tab2, data.frame('d.f.'=aovTab[,'Chi.Df'], 'Chisq'=aovTab[,'Chisq'], 'P'=aovTab[,'Pr..Chisq.'], stringsAsFactors=FALSE))
     }
     tab2$P  <-  sapply(tab2$P, cleanPvals)
     write.csv(tab2, 'output/data/table2.csv', row.names=FALSE)
+    cat('Table 2 written to output/data/table2.csv \n')
 }
 
 cleanPvals  <-  function(x) {
@@ -114,7 +117,7 @@ jagsModel  <-  function(run=TRUE, outputFileName) {
     write(jmod, outputFileName)
 }
 
-fitJags  <-  function(lmModelMatrix, run=TRUE, data, outputFileName='mod.bug') {
+fitJags  <-  function(lmModelMatrix, data, run=TRUE, outputFileName='mod.bug') {
     # fitting an interaction model
     # first extract model matrix from lm model
     tjagsModelMatrix  <-  model.matrix(lmModelMatrix)
@@ -138,13 +141,15 @@ fitJags  <-  function(lmModelMatrix, run=TRUE, data, outputFileName='mod.bug') {
 ###############
 # PAPER NUMBERS
 ###############
-extractNumbersList  <-  function() {
+extractNumbersList  <-  function(metRates, outputPath) {
+    load(outputPath)
     # get average estimates and 95% CI for each parameter
     species           <-  unique(metRates$Species)
-    averageEstimates  <-  ldply(species, getAverageEstimates)
-    ci95Estimates     <-  ldply(species, get95CIEstimates)
+    averageEstimates  <-  ldply(species, getAverageEstimates, jagsSummary=output$model$BUGSoutput$summary, modelMatrix=output$lmerModel1)
+    ci95Estimates     <-  ldply(species, get95CIEstimates, jagsMatrix=output$model$BUGSoutput$sims.matrix, modelMatrix=output$lmerModel1)
     
-    list('species'          =  species,          
+    list('metRates'         =  metRates,
+         'species'          =  species,          
          'averageEstimates' =  averageEstimates, 
          'ci95Estimates'    =  ci95Estimates,
          # compare deltas between temperatures for each species
@@ -156,8 +161,8 @@ extractNumbersList  <-  function() {
     )
 }
 
-getAverageEstimates  <-  function(species) {
-    jagsMat  <-  cleanJagsSummary()
+getAverageEstimates  <-  function(species, ...) {
+    jagsMat  <-  cleanJagsSummary(...)
     isReferenceSpecies  <-  species == 'Bryo'
     if(isReferenceSpecies) {
         lnB10  <-  jagsMat['(Intercept)', 'mean']
@@ -173,14 +178,14 @@ getAverageEstimates  <-  function(species) {
     data.frame(species=species, lnB10=lnB10, s10=s10, lnB25=lnB25, s25=s25, stringsAsFactors=FALSE)
 }
 
-cleanJagsSummary  <-  function(jagsSummary=model$BUGSoutput$summary, modelMatrix=lmerModel1) {
+cleanJagsSummary  <-  function(jagsSummary, modelMatrix) {
     jagsMat            <-  jagsSummary[paste0('beta[', seq_len(ncol(coef(modelMatrix)$Run)), ']'), ]
     rownames(jagsMat)  <-  names(coef(modelMatrix)$Run)
     jagsMat
 }
 
-get95CIEstimates  <-  function(species) {
-    jagsMat  <-  cleanJagsMatrix()
+get95CIEstimates  <-  function(species, ...) {
+    jagsMat  <-  cleanJagsMatrix(...)
     isReferenceSpecies  <-  species == 'Bryo'
     if(isReferenceSpecies) {
         lnB10  <-  jagsMat[, '(Intercept)']
@@ -205,7 +210,7 @@ get95CIEstimates  <-  function(species) {
                stringsAsFactors=FALSE)
 }
 
-cleanJagsMatrix  <-  function(jagsMatrix=model$BUGSoutput$sims.matrix, modelMatrix=lmerModel1) {
+cleanJagsMatrix  <-  function(jagsMatrix, modelMatrix) {
     jagsMat            <-  jagsMatrix[, paste0('beta[', seq_len(ncol(coef(modelMatrix)$Run)), ']')]
     colnames(jagsMat)  <-  names(coef(modelMatrix)$Run)
     jagsMat
@@ -237,39 +242,6 @@ getErEquivalent  <-  function(temp1Kelvin, temp2Kelvin, q10, k=8.62e-5) {
 #############################
 # DEALING WITH BIB REFERENCES
 #############################
-getIndividualBibs  <-  function(path='~/bibtex_library/') {
-    listRefs     <-  dir(path)[grep('.bib', dir(path))]
-    listRefs[listRefs != 'library.bib']
-}
-
-readBibRefs  <-  function(individualBibs, path='~/bibtex_library/', verbose=TRUE) {
-    lapply(individualBibs, function(x, path, verbose) {
-        if(verbose) {
-            print(x)
-        }
-        read.bib(file.path(path, x))
-    }, path=path, verbose=verbose)
-}
-
-listBibs  <-  function() {
-    listRefs        <-  getIndividualBibs()
-    theRefs         <-  readBibRefs(listRefs)
-    names(theRefs)  <-  gsub('.bib', '', listRefs)
-    theRefs
-}
-
-exporBibs  <-  function(theRefs=listBibs(), libraryPath='../library.bib', erase=TRUE, verbose=TRUE) {
-    if(erase)
-        system(paste('rm -r', libraryPath))
-    if(!file.exists(libraryPath))
-        l_ply(theRefs, function(x, libraryPath, verbose) {
-            if(verbose) {
-                print(x)
-            }
-            write.bibtex(x, file=libraryPath, append=TRUE)
-        }, libraryPath=libraryPath, verbose=verbose)
-}
-
 myCite  <-  function(citationsVec) {
     paste0('[@', paste0(citationsVec, collapse=';@'),']')
 }

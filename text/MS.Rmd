@@ -1,8 +1,3 @@
-```{r, results="hide", warnings=FALSE, echo=FALSE, message=FALSE}
-cleanbib()
-myRefs   <-  listBibs()
-exporBibs(myRefs, erase=TRUE)
-```
 **Temperature effects on mass-scaling exponents in colonial animals: a manipulative test**  
   
 *draft date: `r as.character(Sys.Date())`*  
@@ -41,7 +36,7 @@ For *Bugula neritina* and *B. stolonifera*, we reduced body size by cutting whol
 We note that we did not record colony of origin so we cannot include 'genotype' in our analyses. Importantly, our goal was not to partition variance in metabolic rate in a Genotype $\times$ Environment framework; instead, we were interested in how the phenotype of size influences metabolic rate under different temperatures. The nature of our fragmentation approach meant that the age profile of zooids within the fragments we created was identical, regardless of size, by cutting whole branches or pizza slices for arborescent and encrusting species respectively (Fig. 1). As such, age was not a confounding factor in the analysis as all colonies were approximately the same age, regardless of size.  
   
 *3. Respiration measurements*  
-Individual metabolic rates (converted to $\mu$l $\textrm{O}_\textrm{2}$ h^-1^, *n* = `r nrow(metRates)`), $B_i$, were measured as rate of oxygen consumption, $\dot{V}\textrm{O}_\textrm{2}$, of colony fragments at nominal temperatures of 10 or 25 ˚C. All individuals (regardless of size) and species were randomly assigned to test temperatures, and we used replicate vials and controlled temperature cabinets (see below). Measurements were conducted using a 144-channel PreSens Sensor Dish Reader (SDR, AS-1 Scientific, Wellington, New Zealand) according to standard techniques `r myCite(c('koster2008meps', 'lighton2008book', 'white2011amnat'))`.  $\dot{V}\textrm{O}_\textrm{2}$ was measured by placing the colony fragment in a glass vial containing 0.2$\mu$m filtered sea water and a non-consumptive $\textrm{O}_\textrm{2}$ sensor spot and calculated from the rate of change of $\textrm{O}_\textrm{2}$ saturation ($m_a$, \% h^‑1^) as:  
+Individual metabolic rates (converted to $\mu$l $\textrm{O}_\textrm{2}$ h^-1^, *n* = `r nrow(numbersList$metRates)`), $B_i$, were measured as rate of oxygen consumption, $\dot{V}\textrm{O}_\textrm{2}$, of colony fragments at nominal temperatures of 10 or 25 ˚C. All individuals (regardless of size) and species were randomly assigned to test temperatures, and we used replicate vials and controlled temperature cabinets (see below). Measurements were conducted using a 144-channel PreSens Sensor Dish Reader (SDR, AS-1 Scientific, Wellington, New Zealand) according to standard techniques `r myCite(c('koster2008meps', 'lighton2008book', 'white2011amnat'))`.  $\dot{V}\textrm{O}_\textrm{2}$ was measured by placing the colony fragment in a glass vial containing 0.2$\mu$m filtered sea water and a non-consumptive $\textrm{O}_\textrm{2}$ sensor spot and calculated from the rate of change of $\textrm{O}_\textrm{2}$ saturation ($m_a$, \% h^‑1^) as:  
   
 $$\dot{V}\textrm{O}_\textrm{2} = ‑1 \left(\frac{m_a – m_b}{100}\right) V~{\beta}_{\textrm{O}_\textrm{2}}$$, (1)  
   
@@ -58,7 +53,7 @@ All models were initially fitted using maximum likelihood `r myCite('zuur2009boo
   
 **Results**  
   
-```{r}
+```{r, echo=FALSE}
 ci95Estimates     <-  numbersList$ci95Estimates
 metabolicDiff     <-  numbersList$metabolicDiff
 averageEstimates  <-  numbersList$averageEstimates

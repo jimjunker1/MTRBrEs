@@ -75,6 +75,16 @@ whiteGrid  <-  function (...) {
         col = 'grey70', lwd = 0.3, ...)
 }
 
+makeFigure1  <-  function() {
+    toPdf(fig1(), 'output/figures/fig1.pdf', width=8, height=5)
+    embed_fonts('output/figures/fig1.pdf')
+}
+
+makeFigure2  <-  function(...) {
+    toPdf(fig2(...), 'output/figures/fig2.pdf', width=8, height=7)
+    embed_fonts('output/figures/fig2.pdf')
+}
+
 ###############
 # PAPER FIGURES
 ###############
@@ -94,7 +104,7 @@ getProb  <-  function(densObjt) {
     densObjt
 }
 
-plotTriad  <-  function(species=species, spNames=spNames, tmat, x1=TRUE, y1=TRUE, x2=TRUE, y2=TRUE, x3=TRUE, y3=TRUE, x4=TRUE, y4=TRUE) {
+plotTriad  <-  function(species=species, spNames=spNames, tmat, dat, x1=TRUE, y1=TRUE, x2=TRUE, y2=TRUE, x3=TRUE, y3=TRUE, x4=TRUE, y4=TRUE) {
     col10     <-  colorRampPalette(rev(brewer.pal(9, 'Greys')))
     col10     <-  col10(32)
     col10[1]  <-  '#FFFFFF'
@@ -185,7 +195,6 @@ plotTriad  <-  function(species=species, spNames=spNames, tmat, x1=TRUE, y1=TRUE
     proportionalLabel(figureProp(quants), rep(0.86, 2), text=FALSE, type='l', col='black', lwd=1.2)
     proportionalLabel(0.97, 0.86, rounded(mean(s25), 2), adj=c(1, 0.5), col='black', cex=0.8)
     
-    dat         <-  metRates[metRates$Species == species, ]
     dat$colors  <-  c('grey50', 'black')[match(dat$TempK, c(283.15, 298.15))]
     plot(NA, xlab='', ylab='', xlim=c(-1, 7), ylim=c(-6, 6), axes=FALSE, type='n')
     usr  <-  par('usr')
@@ -273,11 +282,12 @@ fig1  <-  function() {
     text(0.5, -0.14/pinRatio, 'G / 4', adj=c(0, 0.5), col='grey60', cex=1.3, font=3)
 }
 
-fig2  <-  function() {
-    tmat  <-  model$BUGSoutput$sims.matrix
-    tmat  <-  tmat[,paste0('beta[', seq_len(ncol(coef(lmerModel1)$Run)), ']')]
-    colnames(tmat)  <-  names(coef(lmerModel1)$Run)
-    species  <-  unique(metRates$Species)
+fig2  <-  function(metRates, outputPath) {
+    load(outputPath)
+    tmat  <-  output$model$BUGSoutput$sims.matrix
+    tmat  <-  tmat[,paste0('beta[', seq_len(ncol(coef(output$lmerModel1)$Run)), ']')]
+    colnames(tmat)  <-  names(coef(output$lmerModel1)$Run)
+    species         <-  unique(metRates$Species)
     # species real names
     spNames  <-  list(substitute(italic('Hippopodina iririkiensis')),
                       'Microcionidae',
@@ -296,11 +306,11 @@ fig2  <-  function() {
     
     par(omi=rep(1, 4), mai=rep(0, 4), cex=1)
     layout(figMat)
-    plotTriad(species[1], spNames[[1]], tmat, x1=TRUE, y1=TRUE, x2=TRUE, y2=FALSE, x3=FALSE, y3=TRUE, x4=FALSE, y4=FALSE)
+    plotTriad(species[1], spNames[[1]], tmat, metRates[metRates$Species == species[1], ], x1=TRUE, y1=TRUE, x2=TRUE, y2=FALSE, x3=FALSE, y3=TRUE, x4=FALSE, y4=FALSE)
     plot(0, 0, axes=FALSE, type='n', xlab='', ylab='')
-    plotTriad(species[2], spNames[[2]], tmat, x1=TRUE, y1=FALSE, x2=TRUE, y2=TRUE, x3=FALSE, y3=FALSE, x4=FALSE, y4=TRUE)
+    plotTriad(species[2], spNames[[2]], tmat, metRates[metRates$Species == species[2], ], x1=TRUE, y1=FALSE, x2=TRUE, y2=TRUE, x3=FALSE, y3=FALSE, x4=FALSE, y4=TRUE)
     plot(0, 0, axes=FALSE, type='n', xlab='', ylab='')
-    plotTriad(species[3], spNames[[3]], tmat, x1=FALSE, y1=TRUE, x2=FALSE, y2=FALSE, x3=TRUE, y3=TRUE, x4=TRUE, y4=FALSE)
+    plotTriad(species[3], spNames[[3]], tmat, metRates[metRates$Species == species[3], ], x1=FALSE, y1=TRUE, x2=FALSE, y2=FALSE, x3=TRUE, y3=TRUE, x4=TRUE, y4=FALSE)
     plot(0, 0, axes=FALSE, type='n', xlab='', ylab='')
-    plotTriad(species[4], spNames[[4]], tmat, x1=FALSE, y1=FALSE, x2=FALSE, y2=TRUE, x3=TRUE, y3=FALSE, x4=TRUE, y4=TRUE)
+    plotTriad(species[4], spNames[[4]], tmat, metRates[metRates$Species == species[4], ], x1=FALSE, y1=FALSE, x2=FALSE, y2=TRUE, x3=TRUE, y3=FALSE, x4=TRUE, y4=TRUE)
 }

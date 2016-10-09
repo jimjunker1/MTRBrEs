@@ -14,12 +14,11 @@
 ###############
 # Bugula = Bugula neritina
 # Stolonifera = Bugula stolonifera
-# Bryo = Hippopodina sp.	
+# Bryo = Hippopodina iririkiensis
 # Sponge = Unknown (Microcionidae family see Hart & Marshall 2009, Ecology 90: 1485--1491)
 
 ##############
 # GROWTH FORMS
 ##############
 # Bugula spp. = 3D arborescent
-# Hippopodina sp. and Microcionidae = 2D and encrusting
-
+# Hippopodina iririkiensis and Microcionidae = 2D and encrusting

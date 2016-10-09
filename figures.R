@@ -1,5 +1,0 @@
-loadfonts(quiet=TRUE)
-toPdf(fig1(), 'output/figures/fig1.pdf', width=8, height=5)
-embed_fonts('output/figures/fig1.pdf')
-toPdf(fig2(), 'output/figures/fig2.pdf', width=8, height=7)
-embed_fonts('output/figures/fig2.pdf')
