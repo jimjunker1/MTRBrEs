@@ -134,7 +134,6 @@ fitJags  <-  function(lmModelMatrix, data, run=TRUE, outputFileName='mod.bug') {
 # PAPER NUMBERS
 ###############
 extractNumbersList  <-  function(metRates, output) {
-
     # get average estimates and 95% CI for each parameter
     species           <-  unique(metRates$Species)
     averageEstimates  <-  ldply(species, getAverageEstimates, jagsSummary=output$model$BUGSoutput$summary, modelMatrix=output$lmerModel1)

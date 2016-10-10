@@ -18,7 +18,7 @@ sources:
 targets:
   all:
     depends:
-      - output/MS.docx
+      - output/text/MS.docx
       - output/data/table1.csv
       - output/data/table2.csv
       - output/figures/fig1.pdf
@@ -26,9 +26,6 @@ targets:
 
   metRates:
     command: readAndCleanData('data/data.csv')
-
-  output/RDatafiles/analyses.RData:
-    command: save(output, file=target_name)
     
   output:
     command: produceAnalysesOutputs(metRates)
@@ -43,16 +40,16 @@ targets:
     command: extractNumbersList(metRates, output)
     
   output/figures/fig1.pdf:
-    command: makeFigure1()
+    command: makeFigure1(target_name)
 
   output/figures/fig2.pdf:
-    command: makeFigure2(metRates, output)
+    command: makeFigure2(dest=target_name, metRates=metRates, output=output)
 
   text/MS.md:
     depends: numbersList
     knitr: TRUE
 
-  output/MS.docx:
+  output/text/MS.docx:
     command: pandoc_convert("text/MS.md", output=target_name, wd=I("."), options = I(c("--bibliography", "text/references.bib", "--csl", "text/ecology.csl")))
     depends:
       - text/references.bib
@@ -60,13 +57,13 @@ targets:
   text/coverLetter.md:
     knitr: TRUE
 
-  output/coverLetter.docx:
+  output/text/coverLetter.docx:
     command: pandoc_convert("text/coverLetter.md", output=target_name, wd=I("."))
 
-  text/answers_to_reviewers.md:
+  text/answersToReviewers.md:
     knitr: TRUE
 
-  output/answers_to_reviewers.docx:
-    command: pandoc_convert("text/answers_to_reviewers.md", output=target_name, wd=I("."), options = I(c("--bibliography", "text/references.bib", "--csl", "text/ecology.csl")))
+  output/text/answersToReviewers.docx:
+    command: pandoc_convert("text/answersToReviewers.md", output=target_name, wd=I("."), options = I(c("--bibliography", "text/references.bib", "--csl", "text/ecology.csl")))
     depends:
       - text/references.bib

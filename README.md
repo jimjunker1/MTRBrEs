@@ -34,7 +34,6 @@ And then install the package `fontcm`, via `extrafont`. This installs the font `
 
 ```r
 extrafont::font_install('fontcm')
-
 ```
 
 Then, to generate all figures, analyses, and manuscript (.docx, using Rmarkdown), simply do:
@@ -45,7 +44,7 @@ remake::make()
 
 All output will be automatically placed in a directory called `output` (it is going to be automatically created for you).
 
-Also notice that the Bayesian analysis in this paper will take 20-30min to run on a regular computer.
+Also notice that the Bayesian analysis in this paper will take 20–30 min to run on a regular computer.
 
 If you find remake confusing and prefer to run plain R, you can use remake to build a script `build.R` that produces a given output, e.g.
 
@@ -66,15 +65,13 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] fontcm_1.1         extrafont_0.17     RColorBrewer_1.1-2 MASS_7.3-45        png_0.1-7          LoLinR_0.0.0.9000 
- [7] knitr_1.13         R2jags_0.5-7       rjags_4-6          coda_0.18-1        plyr_1.8.4         lme4_1.1-12       
-[13] Matrix_1.2-6      
+ [1] fontcm_1.1         extrafont_0.17     RColorBrewer_1.1-2 MASS_7.3-45        png_0.1-7          LoLinR_0.0.0.9000  rmarkdown_0.9.6    knitr_1.13         R2jags_0.5-7       rjags_4-6         
+[11] coda_0.18-1        plyr_1.8.4         lme4_1.1-12        Matrix_1.2-6      
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.5      Rttf2pt1_1.3.4   magrittr_1.5     splines_3.3.1    lattice_0.20-33  R6_2.2.0         minqa_1.2.4     
- [8] stringr_1.0.0    storr_1.0.1      tools_3.3.1      parallel_3.3.1   grid_3.3.1       nlme_3.1-128     extrafontdb_1.0 
-[15] R2WinBUGS_2.1-21 lmtest_0.9-34    yaml_2.1.13      abind_1.4-3      digest_0.6.10    crayon_1.3.2     formatR_1.4     
-[22] nloptr_1.0.4     codetools_0.2-14 evaluate_0.9     remake_0.2.0     stringi_1.1.1    boot_1.3-18      zoo_1.7-13      
+ [1] Rcpp_0.12.5      formatR_1.4      nloptr_1.0.4     tools_3.3.1      boot_1.3-18      digest_0.6.10    remake_0.2.0     evaluate_0.9     nlme_3.1-128     lattice_0.20-33  yaml_2.1.13     
+[12] parallel_3.3.1   Rttf2pt1_1.3.4   storr_1.0.1      stringr_1.0.0    lmtest_0.9-34    grid_3.3.1       R6_2.2.0         minqa_1.2.4      extrafontdb_1.0  magrittr_1.5     codetools_0.2-14
+[23] R2WinBUGS_2.1-21 htmltools_0.3.5  splines_3.3.1    abind_1.4-3      stringi_1.1.1    crayon_1.3.2     zoo_1.7-13      
 ```
 ### Please report if you run into problems or spot a bug on the code:
 d13g0 DOT b4rn3ch3 AT m0n4sh DOT 3du (replace the 0 for o, 1 for i, 3 for e, 4 for a)  
@@ -83,4 +80,4 @@ d13g0 DOT b4rn3ch3 AT m0n4sh DOT 3du (replace the 0 for o, 1 for i, 3 for e, 4 f
 * on the project main page on GitHub, click on the green button `clone or download` and then click on `Download ZIP`  
 
 ### Acknowledgements:  
-Many thanks to [Rich FitzJohn](https://github.com/richfitz), [Remko Duursma](https://github.com/RemkoDuursma), and [Daniel Falster](http://danielfalster.com) for providing excellent examples on how to implement this work flow using `remake`.
+Many thanks to [Rich FitzJohn](https://github.com/richfitz), [Remko Duursma](https://github.com/RemkoDuursma), and [Daniel Falster](http://danielfalster.com) for providing suggestions and excellent examples on how to implement this work flow using `remake`.

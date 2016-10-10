@@ -1,10 +1,3 @@
-<!-- ```{r, results="hide", warnings=FALSE, echo=FALSE, message=FALSE}
-source('../R/functions-analyses.R')
-cleanbib()
-myRefs   <-  listBibs()
-exporBibs(myRefs, erase=FALSE)
-```
- -->
 August 16, 2016
 
 Dear Prof. Peter Raimondi,

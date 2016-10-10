@@ -78,14 +78,14 @@ whiteGrid  <-  function (...) {
         col = 'grey70', lwd = 0.3, ...)
 }
 
-makeFigure1  <-  function() {
-    toPdf(fig1(), 'output/figures/fig1.pdf', width=8, height=5)
-    embed_fonts('output/figures/fig1.pdf')
+makeFigure1  <-  function(dest) {
+    toPdf(fig1(), dest, width=8, height=5)
+    embed_fonts(dest)
 }
 
-makeFigure2  <-  function(...) {
-    toPdf(fig2(...), 'output/figures/fig2.pdf', width=8, height=7)
-    embed_fonts('output/figures/fig2.pdf')
+makeFigure2  <-  function(dest, ...) {
+    toPdf(fig2(...), dest, width=8, height=7)
+    embed_fonts(dest)
 }
 
 ###############
