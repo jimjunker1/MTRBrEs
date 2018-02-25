@@ -2,7 +2,9 @@
 
 This repository contains code and data needed to reproduce the article:
 
-**Barneche DR, White CR, Marshall DJ**, Temperature effects on mass-scaling exponents in colonial animals: a manipulative test. *Ecology* (accepted 2016-10-04)
+**Barneche DR, White CR, Marshall DJ** (2017). Temperature effects on mass-scaling exponents in colonial animals: a manipulative test. *Ecology*, 98:103–111, doi:[10.1002/ecy.1624](http://onlinelibrary.wiley.com/doi/10.1002/ecy.1624/abstract)  
+
+**Code DOI:**  
 
 [![DOI](https://zenodo.org/badge/46690645.svg)](https://zenodo.org/badge/latestdoi/46690645)
 
