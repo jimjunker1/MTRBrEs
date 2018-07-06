@@ -8,3 +8,4 @@ library.bib
 *tmp*
 *.rda
 *.remake/
+.Rproj.user
